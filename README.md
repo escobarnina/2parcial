@@ -1,30 +1,36 @@
 # Sistema de Gestión de Asistencias - Arquinuevo
 
-Sistema de escritorio desarrollado en Java para la gestión de asistencias académicas, implementando arquitectura de 3 capas y patrones de diseño.
+Aplicación Android nativa desarrollada en Java para la gestión de asistencias académicas, implementando arquitectura de 3 capas y patrones de diseño.
 
 ## 📋 Descripción
 
-Aplicación Java Desktop desarrollada con Swing que permite gestionar asistencias de estudiantes, materias, grupos, horarios e inscripciones. El sistema utiliza MySQL como base de datos y permite exportar reportes en formatos Excel y PDF.
+Aplicación Android desarrollada con Java que permite gestionar asistencias de estudiantes, materias, grupos, horarios e inscripciones. El sistema utiliza base de datos local (SQLite) y permite exportar reportes en formatos Excel y PDF. La interfaz utiliza Android Views tradicionales y Jetpack Compose para componentes modernos.
 
 ## 🏗️ Arquitectura
 
-El proyecto sigue una **arquitectura de 3 capas**:
+El proyecto sigue una **arquitectura de 3 capas** adaptada para Android:
 
 ```
-Arquinuevo/
-├── datos/          # Capa de Datos
-│   ├── models/     # Modelos de datos (Usuario, Materia, Grupo, etc.)
-│   ├── repository/ # Repositorios para acceso a datos
-│   ├── adapter/    # Adaptadores para exportación (Excel, PDF)
-│   └── database/   # Gestión de base de datos (MySQL)
+com.arquitectura.asistente/
+├── datos/              # Capa de Datos
+│   ├── adapter/        # Adaptadores para exportación (Excel, PDF)
+│   ├── database/       # Gestión de base de datos (SQLite/MySQL)
+│   └── [Modelos]       # Modelos de datos (Usuario, Materia, Grupo, etc.)
 │
-├── negocio/        # Capa de Negocio
-│   ├── UseCases/   # Casos de uso (lógica de negocio)
-│   └── strategy/   # Patrones Strategy para cálculo de asistencias
+├── negocio/            # Capa de Negocio
+│   ├── strategy/       # Patrones Strategy para cálculo de asistencias
+│   └── [Casos de Uso]  # Lógica de negocio (AsistenciaCU, ExportarAsistenciaCU)
 │
-└── presentacion/   # Capa de Presentación
-    └── Forms/      # Interfaces gráficas (Swing)
+└── presentacion/       # Capa de Presentación
+    ├── widget/         # Adaptadores para RecyclerView
+    └── [Activities]    # Activities y componentes de UI (Android Views + Compose)
 ```
+
+### Separación de Responsabilidades
+
+- **Capa de Datos**: Modelos de dominio, acceso a base de datos (SQLite/MySQL), adaptadores para exportación
+- **Capa de Negocio**: Casos de uso que implementan la lógica de negocio, estrategias para cálculo de asistencias
+- **Capa de Presentación**: Activities, adaptadores de UI, componentes visuales (Android Views y Jetpack Compose)
 
 ## 🎯 Características Principales
 
@@ -41,16 +47,24 @@ Arquinuevo/
 - 🎯 **Patrón Strategy**: Cálculo flexible de estados de asistencia (PRESENTE, RETRASO, FALTA)
 - 🔌 **Patrón Adapter**: Exportación a múltiples formatos sin modificar código cliente
 - 📅 **Validación de Horarios**: Verificación de días y horas para marcar asistencia
+- 📱 **Interfaz Moderna**: Uso de Material Design y Jetpack Compose
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Java 17**: Lenguaje de programación
-- **Swing**: Interfaz gráfica de usuario
-- **MySQL**: Base de datos relacional
+### Lenguajes y Frameworks
+- **Java 11**: Lenguaje principal de programación
+- **Kotlin**: Lenguaje secundario (para Compose y algunas utilidades)
+- **Android SDK**: Framework de desarrollo móvil
+- **Jetpack Compose**: Framework moderno de UI declarativa
+- **Android Views**: Componentes tradicionales de UI (Activities, RecyclerView, etc.)
+
+### Bibliotecas y Herramientas
 - **Gradle**: Sistema de construcción
+- **SQLite**: Base de datos local (o MySQL remoto)
 - **Apache POI**: Generación de archivos Excel
 - **iText 7**: Generación de archivos PDF
-- **JUnit 5**: Framework de pruebas
+- **AndroidX Libraries**: AppCompat, Material Design, RecyclerView, CardView
+- **JUnit**: Framework de pruebas
 
 ## 📦 Dependencias
 
@@ -58,31 +72,41 @@ Las dependencias principales se encuentran en `app/build.gradle`:
 
 ```gradle
 dependencies {
-    // MySQL JDBC Driver
-    implementation 'com.mysql:mysql-connector-j:8.2.0'
+    // AndroidX Core
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
     
-    // Apache POI para Excel
-    implementation 'org.apache.poi:poi:5.2.3'
-    implementation 'org.apache.poi:poi-ooxml:5.2.3'
+    // Jetpack Compose
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.lifecycle.runtime.ktx
     
-    // iText para PDF
+    // Exportación de datos
     implementation 'com.itextpdf:itext7-core:7.2.5'
-    implementation 'com.itextpdf:kernel:7.2.5'
-    implementation 'com.itextpdf:layout:7.2.5'
+    implementation 'org.apache.poi:poi-ooxml:5.2.4'
     
-    // Guava
-    implementation libs.guava
-    
-    // JUnit para pruebas
-    testImplementation libs.junit.jupiter
+    // Testing
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    androidTestImplementation platform(libs.androidx.compose.bom)
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
 }
 ```
 
 ## 🚀 Requisitos Previos
 
-- **Java 17** o superior
-- **MySQL 8.0** o superior
+- **Android Studio** (Hedgehog | 2023.1.1 o superior)
+- **JDK 11** o superior
+- **Android SDK** (API 33 mínimo, API 36 target)
 - **Gradle 8.6** o superior (incluido en el proyecto)
+- **Dispositivo Android** o **Emulador** con Android 13+ (API 33+)
 
 ## 📥 Instalación
 
@@ -92,28 +116,34 @@ dependencies {
    cd AsistenciaArqui
    ```
 
-2. **Configurar la base de datos MySQL**
-   - Crear una base de datos MySQL
-   - Actualizar las credenciales en `DatabaseHelper.java` o usar un archivo de configuración
+2. **Abrir el proyecto en Android Studio**
+   - Abrir Android Studio
+   - Seleccionar "Open an Existing Project"
+   - Navegar a la carpeta del proyecto y seleccionarla
+   - Esperar a que Gradle sincronice las dependencias
 
-3. **Compilar el proyecto**
+3. **Configurar la base de datos**
+   - Si usa SQLite: La base de datos se crea automáticamente en el dispositivo
+   - Si usa MySQL: Actualizar las credenciales en `DatabaseHelper.java` o usar un archivo de configuración
+
+4. **Compilar el proyecto**
    ```bash
    ./gradlew build
    ```
-
-4. **Ejecutar la aplicación**
-   ```bash
-   ./gradlew run
-   ```
    
-   O en Windows:
-   ```bash
-   gradlew.bat run
-   ```
+   O desde Android Studio: `Build > Make Project`
+
+5. **Ejecutar la aplicación**
+   - Conectar un dispositivo Android o iniciar un emulador
+   - Desde Android Studio: Click en el botón "Run" (▶️)
+   - Desde terminal:
+     ```bash
+     ./gradlew installDebug
+     ```
 
 ## 🗄️ Configuración de Base de Datos
 
-El sistema requiere una base de datos MySQL. Las tablas se crean automáticamente al ejecutar la aplicación por primera vez mediante `DatabaseMigrations`.
+El sistema puede usar SQLite (base de datos local) o MySQL (base de datos remota). Las tablas se crean automáticamente al ejecutar la aplicación por primera vez mediante `DatabaseMigrations`.
 
 ### Estructura de Tablas
 
@@ -127,15 +157,16 @@ El sistema requiere una base de datos MySQL. Las tablas se crean automáticament
 ## 🎨 Patrones de Diseño Implementados
 
 ### 1. Arquitectura de 3 Capas
-- **Capa de Datos**: Modelos, repositorios y acceso a BD
-- **Capa de Negocio**: Casos de uso y lógica de negocio
-- **Capa de Presentación**: Interfaces gráficas
+- **Capa de Datos** (`datos/`): Modelos, acceso a BD, adaptadores de exportación
+- **Capa de Negocio** (`negocio/`): Casos de uso y lógica de negocio
+- **Capa de Presentación** (`presentacion/`): Activities, adaptadores de UI, componentes visuales
 
 ### 2. Patrón Strategy
 Implementado en `negocio/strategy/` para calcular el estado de asistencia:
 - `EstrategiaPresente`: Política flexible
 - `EstrategiaRetraso`: Política estándar (por defecto)
 - `EstrategiaFalta`: Política estricta
+- `IEstrategiaAsistencia`: Interface común
 
 ### 3. Patrón Adapter
 Implementado en `datos/adapter/` para exportación:
@@ -150,34 +181,57 @@ AsistenciaArqui/
 ├── app/
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/
-│   │   │   │   └── Arquinuevo/
-│   │   │   │       ├── datos/          # Capa de datos
-│   │   │   │       ├── negocio/        # Capa de negocio
-│   │   │   │       └── presentacion/   # Capa de presentación
-│   │   │   └── resources/
-│   │   └── test/
-│   └── build.gradle
+│   │   │   ├── java/com/arquitectura/asistente/
+│   │   │   │   ├── datos/              # Capa de datos
+│   │   │   │   │   ├── adapter/        # Adaptadores de exportación
+│   │   │   │   │   └── database/       # Gestión de BD
+│   │   │   │   ├── negocio/            # Capa de negocio
+│   │   │   │   │   └── strategy/       # Estrategias de cálculo
+│   │   │   │   ├── presentacion/       # Capa de presentación
+│   │   │   │   │   └── widget/         # Adaptadores de UI
+│   │   │   │   └── MainActivity.java   # Activity principal
+│   │   │   ├── res/                    # Recursos Android
+│   │   │   │   ├── layout/             # Layouts XML
+│   │   │   │   ├── values/             # Strings, colors, etc.
+│   │   │   │   └── drawable/          # Imágenes y drawables
+│   │   │   └── AndroidManifest.xml
+│   │   ├── androidTest/               # Pruebas instrumentadas
+│   │   └── test/                      # Pruebas unitarias
+│   ├── build.gradle                   # Configuración del módulo app
+│   └── proguard-rules.pro
 ├── gradle/
-│   └── wrapper/
+│   ├── wrapper/
+│   └── libs.versions.toml
 ├── .gitignore
 ├── README.md
+├── build.gradle                       # Configuración del proyecto
 ├── settings.gradle
+├── gradle.properties
 ├── gradlew
 └── gradlew.bat
 ```
 
 ## 🧪 Ejecutar Pruebas
 
+### Pruebas Unitarias
 ```bash
 ./gradlew test
 ```
 
+### Pruebas Instrumentadas (Android)
+```bash
+./gradlew connectedAndroidTest
+```
+
+### Desde Android Studio
+- Pruebas unitarias: Click derecho en la clase de prueba > "Run"
+- Pruebas instrumentadas: Click derecho en la clase de prueba > "Run"
+
 ## 📝 Uso
 
-1. **Iniciar la aplicación**: Ejecutar `./gradlew run`
-2. **Gestionar asistencias**: Usar la interfaz gráfica para registrar asistencias
-3. **Exportar reportes**: Seleccionar grupo y formato (Excel/PDF) para exportar
+1. **Iniciar la aplicación**: Ejecutar desde Android Studio o instalar el APK
+2. **Gestionar asistencias**: Usar la interfaz de la aplicación para registrar asistencias
+3. **Exportar reportes**: Seleccionar grupo y formato (Excel/PDF) para exportar desde la aplicación
 
 ## 👥 Roles del Sistema
 
@@ -190,17 +244,30 @@ AsistenciaArqui/
 - Las contraseñas deben almacenarse de forma segura (hash)
 - Las conexiones a MySQL deben usar SSL en producción
 - No versionar archivos de credenciales (ver `.gitignore`)
+- Usar ProGuard/R8 para ofuscar el código en producción
 
 ## 🐛 Solución de Problemas
 
-### Error de conexión a MySQL
-- Verificar que MySQL esté ejecutándose
+### Error de conexión a base de datos
+- Verificar que la base de datos esté configurada correctamente
 - Comprobar credenciales en `DatabaseHelper`
-- Verificar que la base de datos exista
+- Verificar permisos de red si usa MySQL remoto
 
 ### Error al exportar
-- Verificar que las dependencias estén instaladas
-- Comprobar permisos de escritura en el directorio de salida
+- Verificar permisos de almacenamiento en AndroidManifest.xml
+- Comprobar que las dependencias estén instaladas
+- Verificar permisos de escritura en el dispositivo
+
+### Problemas de compilación
+- Limpiar el proyecto: `./gradlew clean`
+- Invalidar cachés en Android Studio: `File > Invalidate Caches / Restart`
+- Sincronizar Gradle: `File > Sync Project with Gradle Files`
+
+## 📱 Compatibilidad
+
+- **Versión mínima de Android**: API 33 (Android 13)
+- **Versión objetivo**: API 36 (Android 15)
+- **Arquitecturas soportadas**: armeabi-v7a, arm64-v8a, x86, x86_64
 
 ## 📄 Licencia
 
@@ -212,13 +279,14 @@ Desarrollado como proyecto académico de Arquitectura de Software.
 
 ## 📚 Recursos Adicionales
 
+- [Documentación de Android](https://developer.android.com/)
+- [Documentación de Jetpack Compose](https://developer.android.com/jetpack/compose)
 - [Documentación de Gradle](https://docs.gradle.org/)
 - [Documentación de Apache POI](https://poi.apache.org/)
 - [Documentación de iText](https://itextpdf.com/)
-- [Documentación de MySQL](https://dev.mysql.com/doc/)
 
 ---
 
-**Versión**: 1.0.0  
-**Última actualización**: 2025
-
+**Versión**: 2.0.0  
+**Última actualización**: 2025  
+**Plataforma**: Android (Nativo)
