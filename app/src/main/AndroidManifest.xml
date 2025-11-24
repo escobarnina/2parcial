@@ -23,11 +23,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".presentacion.AsistenciaActivity"
-            android:exported="false"
-            android:label="Gestionar Asistencias"
-            android:theme="@style/Theme.Asistente" />
-        <activity
             android:name=".presentacion.EstudianteActivity"
             android:exported="false"
             android:label="@string/modo_estudiante"

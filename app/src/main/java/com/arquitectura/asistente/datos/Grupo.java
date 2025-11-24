@@ -219,6 +219,58 @@ public class Grupo {
     }
 
     /**
+     * Obtiene los grupos en los que está inscrito un estudiante (consulta personalizada)
+     * Sigue el mismo patrón que Asistencia.obtenerPorAlumno
+     */
+    public static List<Grupo> obtenerPorEstudiante(Integer estudianteId) {
+        verificarInicializacion();
+        
+        List<Grupo> grupos = new ArrayList<>();
+        String sql = "SELECT g.id, g.grupo, g.materia_id, m.nombre as materia_nombre, " +
+                     "g.docente_id, u.nombres || ' ' || u.apellidos as docente_nombre, " +
+                     "g.semestre, g.gestion, g.capacidad, g.tolerancia_minutos, g.tipo_estrategia " +
+                     "FROM grupos g " +
+                     "INNER JOIN boletas b ON g.id = b.grupo_id " +
+                     "INNER JOIN materias m ON g.materia_id = m.id " +
+                     "INNER JOIN usuarios u ON g.docente_id = u.id " +
+                     "WHERE b.alumno_id = ? " +
+                     "ORDER BY m.nombre, g.grupo";
+        
+        SQLiteDatabase db = baseDAO.getReadableDatabase();
+        
+        try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(estudianteId)})) {
+            while (cursor.moveToNext()) {
+                grupos.add(mapCursorToGrupo(cursor));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al obtener grupos por estudiante: " + estudianteId, e);
+        } finally {
+            db.close();
+        }
+        
+        return grupos;
+    }
+
+    /**
+     * Mapea un Cursor a un objeto Grupo
+     */
+    private static Grupo mapCursorToGrupo(Cursor cursor) {
+        Grupo grupo = new Grupo();
+        grupo.setId(cursor.getInt(0));
+        grupo.setGrupo(cursor.getString(1));
+        grupo.setMateriaId(cursor.getInt(2));
+        grupo.setMateriaNombre(cursor.getString(3));
+        grupo.setDocenteId(cursor.getInt(4));
+        grupo.setDocenteNombre(cursor.getString(5));
+        grupo.setSemestre(cursor.getInt(6));
+        grupo.setGestion(cursor.getInt(7));
+        grupo.setCapacidad(cursor.getInt(8));
+        grupo.setToleranciaMinutos(cursor.getInt(9));
+        grupo.setTipoEstrategia(cursor.getString(10));
+        return grupo;
+    }
+
+    /**
      * Verifica que la clase haya sido inicializada antes de usar los métodos de acceso a datos
      */
     private static void verificarInicializacion() {
