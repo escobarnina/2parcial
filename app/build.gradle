@@ -5,10 +5,8 @@ plugins {
 }
 
 android {
-    namespace 'com.arquitectura.asistente'
-    compileSdk {
-        version = release(36)
-    }
+    namespace = 'com.arquitectura.asistente'
+    compileSdk = 36
 
     defaultConfig {
         applicationId "com.arquitectura.asistente"

@@ -180,7 +180,8 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
                     estado = "PRESENTE"; // Fallback
                 }
                 
-                mostrarDialogoAsistencia(grupo, hora, horarioClase, estado);
+                String estrategiaAplicada = asistenciaCU.getUltimaEstrategiaAplicada();
+                mostrarDialogoAsistencia(grupo, hora, horarioClase, estado, estrategiaAplicada);
             } else {
                 // Verificar si el estado es null (fuera de horario)
                 String estado = asistenciaCU.getUltimoEstadoCalculado();
@@ -200,7 +201,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
     /**
      * Muestra un diálogo Material Design con el estado de la asistencia
      */
-    private void mostrarDialogoAsistencia(Grupo grupo, String horaMarcada, String horarioClase, String estado) {
+    private void mostrarDialogoAsistencia(Grupo grupo, String horaMarcada, String horarioClase, String estado, String estrategiaAplicada) {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_asistencia);
@@ -227,6 +228,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         TextView tvHoraMarcada = dialog.findViewById(R.id.tvHoraMarcada);
         TextView tvHorarioClase = dialog.findViewById(R.id.tvHorarioClase);
         MaterialButton btnAceptar = dialog.findViewById(R.id.btnAceptar);
+        TextView tvEstrategia = dialog.findViewById(R.id.tvEstrategia);
         
         // Configurar según el estado
         switch (estado) {
@@ -257,6 +259,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
         tvHoraMarcada.setText(horaMarcada);
         tvHorarioClase.setText(horarioClase);
+        tvEstrategia.setText(formatearNombreEstrategia(estrategiaAplicada));
         
         // Botón aceptar
         btnAceptar.setOnClickListener(v -> dialog.dismiss());
@@ -336,6 +339,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         TextView tvHoraMarcada = dialog.findViewById(R.id.tvHoraMarcada);
         TextView tvHorarioClase = dialog.findViewById(R.id.tvHorarioClase);
         MaterialButton btnAceptar = dialog.findViewById(R.id.btnAceptar);
+        TextView tvEstrategia = dialog.findViewById(R.id.tvEstrategia);
         
         // Obtener horario para mostrar
         String fecha = asistencia.getFecha();
@@ -378,6 +382,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
         tvHoraMarcada.setText(asistencia.getHoraMarcada());
         tvHorarioClase.setText(horarioClase);
+        tvEstrategia.setText(formatearNombreEstrategia(grupo != null ? grupo.getTipoEstrategia() : null));
         
         // Botón aceptar
         btnAceptar.setOnClickListener(v -> dialog.dismiss());
@@ -456,6 +461,25 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             }
         } catch (Exception e) {
             return "Desconocido";
+        }
+    }
+
+    /**
+     * Devuelve una descripción legible para el tipo de estrategia
+     */
+    private String formatearNombreEstrategia(String estrategia) {
+        if (estrategia == null) {
+            return getString(R.string.dialog_asistencia_estrategia_desconocida);
+        }
+
+        switch (estrategia.toUpperCase()) {
+            case "PRESENTE":
+                return getString(R.string.dialog_asistencia_estrategia_presente);
+            case "FALTA":
+                return getString(R.string.dialog_asistencia_estrategia_falta);
+            case "RETRASO":
+            default:
+                return getString(R.string.dialog_asistencia_estrategia_retraso);
         }
     }
 }

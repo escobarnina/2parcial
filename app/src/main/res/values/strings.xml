@@ -34,6 +34,11 @@
     <string name="dialog_asistencia_hora_marcada">Hora marcada:</string>
     <string name="dialog_asistencia_horario_clase">Horario de clase:</string>
     <string name="dialog_asistencia_aceptar">Aceptar</string>
+    <string name="dialog_asistencia_estrategia_label">Estrategia aplicada:</string>
+    <string name="dialog_asistencia_estrategia_presente">Presente</string>
+    <string name="dialog_asistencia_estrategia_retraso">Retraso</string>
+    <string name="dialog_asistencia_estrategia_falta">Falta</string>
+    <string name="dialog_asistencia_estrategia_desconocida">No disponible</string>
     
     <!-- Diálogo Sin Horario -->
     <string name="dialog_sin_horario_titulo">Horario no disponible</string>

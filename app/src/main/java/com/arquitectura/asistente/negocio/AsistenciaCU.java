@@ -35,6 +35,7 @@ public class AsistenciaCU {
     private static final String TAG = "AsistenciaCU";
     private IEstrategiaAsistencia estrategia;
     private String ultimoEstadoCalculado; // Para poder obtener el estado después de marcar
+    private String ultimaEstrategiaAplicada; // Para exponer la estrategia usada al marcar
     
     // Instancias explícitas de las clases de datos para hacer visibles las relaciones
     private Asistencia asistenciaData;
@@ -90,6 +91,7 @@ public class AsistenciaCU {
         try {
             // Limpiar el estado anterior para evitar confusiones
             this.ultimoEstadoCalculado = null;
+            this.ultimaEstrategiaAplicada = null;
             
             // Validar que el alumno esté inscrito en el grupo
             boolean inscrito = asistenciaData.estaInscrito(alumnoId, grupoId);
@@ -128,20 +130,24 @@ public class AsistenciaCU {
 
             // Obtener tipo de estrategia del grupo
             String tipoEstrategia = grupoData.obtenerTipoEstrategiaGrupo(grupoId);
+            String tipoEstrategiaNormalizado = tipoEstrategia != null ? tipoEstrategia : "RETRASO";
             Log.d(TAG, "Tipo de estrategia del grupo " + grupoId + ": " + tipoEstrategia);
 
             // Configurar estrategia automáticamente desde BD según el grupo actual
             // IMPORTANTE: Cada grupo puede tener una estrategia diferente, por lo que
             // debemos actualizar la estrategia cada vez que se marca asistencia
-            switch (tipoEstrategia) {
+            switch (tipoEstrategiaNormalizado) {
                 case "PRESENTE":
                     estrategia = new EstrategiaPresente();
+                    ultimaEstrategiaAplicada = "PRESENTE";
                     break;
                 case "FALTA":
                     estrategia = new EstrategiaFalta();
+                    ultimaEstrategiaAplicada = "FALTA";
                     break;
                 default:
                     estrategia = new EstrategiaRetraso();
+                    ultimaEstrategiaAplicada = "RETRASO";
             }
             Log.d(TAG, "Estrategia configurada para grupo " + grupoId + ": " + estrategia.getClass().getSimpleName());
 
@@ -153,6 +159,7 @@ public class AsistenciaCU {
             if (estado == null) {
                 Log.w(TAG, "No se puede marcar asistencia: fuera del horario de clase");
                 this.ultimoEstadoCalculado = null;
+                this.ultimaEstrategiaAplicada = null;
                 return false;
             }
 
@@ -211,6 +218,14 @@ public class AsistenciaCU {
      */
     public String getUltimoEstadoCalculado() {
         return ultimoEstadoCalculado;
+    }
+
+    /**
+     * Obtiene la última estrategia aplicada para calcular la asistencia
+     * @return Estrategia aplicada: "PRESENTE", "RETRASO" o "FALTA"
+     */
+    public String getUltimaEstrategiaAplicada() {
+        return ultimaEstrategiaAplicada;
     }
 
     /**
