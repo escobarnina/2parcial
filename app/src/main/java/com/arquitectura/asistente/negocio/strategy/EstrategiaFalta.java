@@ -20,9 +20,9 @@ public class EstrategiaFalta implements IEstrategiaAsistencia {
         logger.info("Evaluando asistencia (Estricto) - Marcado: " + horaMarcado + ", Inicio: " + horaInicio + ", Fin: " + horaFin);
         
         try {
-            // Verificar si está fuera del horario de finalización
-            if (estaFueraDelHorario(horaMarcado, horaFin)) {
-                logger.info("Fuera del horario de finalización → FALTA");
+            // Verificar si está fuera del rango de horario [horaInicio, horaFin]
+            if (estaFueraDelHorario(horaMarcado, horaInicio, horaFin)) {
+                logger.info("Fuera del horario de clase → FALTA");
                 return "FALTA";
             }
             
@@ -31,8 +31,10 @@ public class EstrategiaFalta implements IEstrategiaAsistencia {
             
             String estado;
             if (diferencia < 0) {
-                // Llegó antes de la hora de inicio
-                logger.info("Llegó antes de la hora de inicio → PRESENTE");
+                // Llegó antes de la hora de inicio (pero dentro del horario de clase)
+                // Esto no debería pasar si estaFueraDelHorario funciona correctamente,
+                // pero por seguridad mantenemos esta lógica
+                logger.info("Llegó antes de la hora de inicio (dentro del horario) → PRESENTE");
                 estado = "PRESENTE";
             } else if (diferencia <= MARGEN_PRESENTE) {
                 // Primeros 10 minutos después del inicio
@@ -57,10 +59,20 @@ public class EstrategiaFalta implements IEstrategiaAsistencia {
         }
     }
 
-    private boolean estaFueraDelHorario(String horaMarcado, String horaFin) {
+    /**
+     * Verifica si la hora marcada está fuera del rango de horario [horaInicio, horaFin]
+     * @param horaMarcado Hora en que se marcó la asistencia
+     * @param horaInicio Hora de inicio de la clase
+     * @param horaFin Hora de fin de la clase
+     * @return true si está fuera del horario, false si está dentro
+     */
+    private boolean estaFueraDelHorario(String horaMarcado, String horaInicio, String horaFin) {
         int minutosMarcado = convertirHoraAMinutos(horaMarcado);
+        int minutosInicio = convertirHoraAMinutos(horaInicio);
         int minutosFin = convertirHoraAMinutos(horaFin);
-        return minutosMarcado > minutosFin;
+        
+        // Está fuera si es antes de horaInicio o después de horaFin
+        return minutosMarcado < minutosInicio || minutosMarcado > minutosFin;
     }
 
     private int calcularDiferenciaMinutos(String hora1, String hora2) {
