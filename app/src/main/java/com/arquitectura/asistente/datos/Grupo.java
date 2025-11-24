@@ -221,12 +221,14 @@ public class Grupo {
     /**
      * Obtiene los grupos en los que está inscrito un estudiante (consulta personalizada)
      * Sigue el mismo patrón que Asistencia.obtenerPorAlumno
+     * IMPORTANTE: Solo devuelve grupos donde el estudiante tiene una inscripción activa en boletas
      */
     public static List<Grupo> obtenerPorEstudiante(Integer estudianteId) {
         verificarInicializacion();
         
         List<Grupo> grupos = new ArrayList<>();
-        String sql = "SELECT g.id, g.grupo, g.materia_id, m.nombre as materia_nombre, " +
+        // Consulta con INNER JOIN asegura que solo se devuelvan grupos con inscripción
+        String sql = "SELECT DISTINCT g.id, g.grupo, g.materia_id, m.nombre as materia_nombre, " +
                      "g.docente_id, u.nombres || ' ' || u.apellidos as docente_nombre, " +
                      "g.semestre, g.gestion, g.capacidad, g.tolerancia_minutos, g.tipo_estrategia " +
                      "FROM grupos g " +
@@ -239,9 +241,15 @@ public class Grupo {
         SQLiteDatabase db = baseDAO.getReadableDatabase();
         
         try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(estudianteId)})) {
+            int count = 0;
             while (cursor.moveToNext()) {
-                grupos.add(mapCursorToGrupo(cursor));
+                Grupo grupo = mapCursorToGrupo(cursor);
+                grupos.add(grupo);
+                count++;
+                Log.d(TAG, "Grupo encontrado para estudiante " + estudianteId + ": ID=" + grupo.getId() + 
+                      ", Materia=" + grupo.getMateriaNombre() + ", Grupo=" + grupo.getGrupo());
             }
+            Log.d(TAG, "Total de grupos encontrados para estudiante " + estudianteId + ": " + count);
         } catch (Exception e) {
             Log.e(TAG, "Error al obtener grupos por estudiante: " + estudianteId, e);
         } finally {
