@@ -39,6 +39,10 @@
     <string name="dialog_sin_horario_titulo">Horario no disponible</string>
     <string name="dialog_sin_horario_mensaje">No hay horario configurado para este día. Por favor, marca tu asistencia en los días de clase programados.</string>
     
+    <!-- Diálogo Fuera de Horario -->
+    <string name="dialog_fuera_horario_titulo">Fuera del horario de clase</string>
+    <string name="dialog_fuera_horario_mensaje">No puedes marcar asistencia fuera del horario de clase. Por favor, marca tu asistencia durante el horario establecido.</string>
+    
     <!-- Acciones -->
     <string name="ingresar">Ingresar</string>
 </resources>

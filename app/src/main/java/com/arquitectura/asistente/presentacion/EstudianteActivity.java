@@ -21,6 +21,7 @@ import com.google.android.material.card.MaterialCardView;
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
 import com.arquitectura.asistente.datos.Horario;
+import com.arquitectura.asistente.datos.Asistencia;
 import com.arquitectura.asistente.negocio.AsistenciaCU;
 import com.arquitectura.asistente.presentacion.widget.GrupoAdapter;
 
@@ -56,10 +57,10 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         // Inicializar casos de uso y acceso a datos
         // IMPORTANTE: Asistencia se inicializa dentro de AsistenciaCU
         // pero también necesitamos inicializarlo aquí para validaciones
-        com.arquitectura.asistente.datos.Asistencia.inicializar(this);
         this.asistenciaCU = new AsistenciaCU(this);
         Grupo.inicializar(this);
         Horario.inicializar(this);
+        Asistencia.inicializar(this);
         
         inicializarVistas();
         cargarGruposInscritos();
@@ -136,7 +137,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             }
             
             // Verificar que el estudiante esté inscrito en este grupo
-            boolean inscrito = com.arquitectura.asistente.datos.Asistencia.estaInscrito(ESTUDIANTE_ID, grupo.getId());
+            boolean inscrito = Asistencia.estaInscrito(ESTUDIANTE_ID, grupo.getId());
             if (!inscrito) {
                 Toast.makeText(this, "Error: No estás inscrito en este grupo", Toast.LENGTH_LONG).show();
                 return;
@@ -146,7 +147,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             String hora = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
             
             // Verificar si ya existe una asistencia marcada para este día
-            com.arquitectura.asistente.datos.Asistencia asistenciaExistente = 
+            Asistencia asistenciaExistente = 
                 asistenciaCU.obtenerAsistenciaExistente(ESTUDIANTE_ID, grupo.getId(), fecha);
             
             if (asistenciaExistente != null) {
@@ -183,7 +184,15 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
                 
                 mostrarDialogoAsistencia(grupo, hora, horarioClase, estado);
             } else {
-                Toast.makeText(this, getString(R.string.asistencia_error), Toast.LENGTH_LONG).show();
+                // Verificar si el estado es null (fuera de horario)
+                String estado = asistenciaCU.getUltimoEstadoCalculado();
+                if (estado == null) {
+                    // Está fuera del horario, mostrar diálogo específico
+                    mostrarDialogoFueraHorario(grupo, hora, horarioClase);
+                } else {
+                    // Otro tipo de error
+                    Toast.makeText(this, getString(R.string.asistencia_error), Toast.LENGTH_LONG).show();
+                }
             }
         } catch (Exception e) {
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -304,7 +313,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
     /**
      * Muestra un diálogo cuando la asistencia ya fue marcada anteriormente
      */
-    private void mostrarDialogoAsistenciaYaMarcada(Grupo grupo, com.arquitectura.asistente.datos.Asistencia asistencia) {
+    private void mostrarDialogoAsistenciaYaMarcada(Grupo grupo, Asistencia asistencia) {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_asistencia);
@@ -371,6 +380,48 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
         tvHoraMarcada.setText(asistencia.getHoraMarcada());
         tvHorarioClase.setText(horarioClase);
+        
+        // Botón aceptar
+        btnAceptar.setOnClickListener(v -> dialog.dismiss());
+        
+        // Mostrar diálogo
+        dialog.show();
+    }
+
+    /**
+     * Muestra un diálogo cuando se intenta marcar asistencia fuera del horario de clase
+     */
+    private void mostrarDialogoFueraHorario(Grupo grupo, String horaMarcada, String horarioClase) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_fuera_horario);
+        dialog.setCancelable(true);
+        
+        // Configurar ventana del diálogo
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setDimAmount(0.6f);
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+        
+        // Obtener vistas
+        TextView tvTitulo = dialog.findViewById(R.id.tvTitulo);
+        TextView tvMensaje = dialog.findViewById(R.id.tvMensaje);
+        TextView tvMateria = dialog.findViewById(R.id.tvMateriaInfo);
+        TextView tvHorario = dialog.findViewById(R.id.tvHorarioInfo);
+        TextView tvHoraMarcada = dialog.findViewById(R.id.tvHoraMarcadaInfo);
+        MaterialButton btnAceptar = dialog.findViewById(R.id.btnAceptar);
+        
+        // Configurar información
+        tvTitulo.setText(getString(R.string.dialog_fuera_horario_titulo));
+        tvMensaje.setText(getString(R.string.dialog_fuera_horario_mensaje));
+        tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
+        tvHorario.setText("Horario de clase: " + horarioClase);
+        tvHoraMarcada.setText("Hora marcada: " + horaMarcada);
         
         // Botón aceptar
         btnAceptar.setOnClickListener(v -> dialog.dismiss());

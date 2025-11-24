@@ -151,6 +151,13 @@ public class AsistenciaCU {
             String estado = estrategia.calcularEstado(horaMarcado, horaInicio, horaFin);
             Log.d(TAG, "Estado calculado por la estrategia: " + estado + " (Inicio: " + horaInicio + ", Fin: " + horaFin + ")");
 
+            // Si el estado es null, significa que está fuera del horario y no se puede marcar asistencia
+            if (estado == null) {
+                Log.w(TAG, "No se puede marcar asistencia: fuera del horario de clase");
+                this.ultimoEstadoCalculado = null;
+                return false;
+            }
+
             // Crear y guardar la asistencia
             Asistencia asistencia = new Asistencia();
             asistencia.setAlumnoId(alumnoId);

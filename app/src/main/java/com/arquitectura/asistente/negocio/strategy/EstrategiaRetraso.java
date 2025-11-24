@@ -21,8 +21,8 @@ public class EstrategiaRetraso implements IEstrategiaAsistencia {
         try {
             // Verificar si está fuera del rango de horario [horaInicio, horaFin]
             if (estaFueraDelHorario(horaMarcado, horaInicio, horaFin)) {
-                logger.info("Fuera del horario de clase → FALTA");
-                return "FALTA";
+                logger.info("Fuera del horario de clase → null (no se puede marcar asistencia)");
+                return null;
             }
             
             int diferencia = calcularDiferenciaMinutos(horaMarcado, horaInicio);
