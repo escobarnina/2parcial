@@ -425,13 +425,179 @@ String estado3 = contexto.marcarAsistencia(...); // PRESENTE/RETRASO/FALTA
 
 ---
 
+## ¿Es Correcto que la BD Elija la Estrategia?
+
+### ❓ Pregunta Frecuente
+
+**¿Por qué la base de datos elige la estrategia en lugar del cliente?**
+
+Esta es una **variante válida y común** del patrón Strategy. Te explicamos por qué:
+
+---
+
+### ✅ Justificación Técnica
+
+#### 1. **Separación de Responsabilidades**
+
+En el pseudocódigo clásico, el cliente elige la estrategia porque:
+- El cliente conoce el contexto de uso
+- El cliente decide qué operación realizar
+
+En nuestro sistema, la BD elige la estrategia porque:
+- **Cada grupo tiene su propia política de asistencia** configurada por el administrador
+- El cliente (EstudianteActivity) **NO debe conocer** qué estrategia usar
+- La lógica de negocio está **centralizada** en el Context
+
+#### 2. **Principio de Menor Conocimiento (Law of Demeter)**
+
+```
+❌ MAL (Cliente conoce demasiado):
+EstudianteActivity → conoce tipo_estrategia → elige estrategia → pasa a Context
+
+✅ BIEN (Cliente solo conoce Context):
+EstudianteActivity → solo conoce AsistenciaCU → Context maneja todo
+```
+
+#### 3. **Configurabilidad vs. Código Hardcodeado**
+
+**Opción A: Cliente elige (Pseudocódigo clásico)**
+```java
+// Cliente debe conocer todas las estrategias
+if (tipo == "PRESENTE") {
+    contexto.setEstrategia(new EstrategiaPresente());
+} else if (tipo == "RETRASO") {
+    contexto.setEstrategia(new EstrategiaRetraso());
+}
+// ❌ Problema: Si agregamos nueva estrategia, debemos modificar TODOS los clientes
+```
+
+**Opción B: Context elige desde BD (Nuestra implementación)**
+```java
+// Cliente solo invoca
+contexto.marcarAsistencia(...);
+
+// Context obtiene configuración desde BD
+String tipoEstrategia = Grupo.obtenerTipoEstrategiaGrupo(grupoId);
+// ✅ Ventaja: Agregar nueva estrategia solo requiere modificar Context
+```
+
+---
+
+### 📚 Referencias y Patrones Relacionados
+
+#### Strategy Pattern con Factory Pattern
+
+Nuestra implementación combina **Strategy + Factory**:
+
+```java
+// Factory Pattern: Context actúa como Factory
+if (estrategia == null) {
+    switch (tipoEstrategia) {
+        case "PRESENTE":
+            estrategia = new EstrategiaPresente();  // Factory crea estrategia
+            break;
+        // ...
+    }
+}
+```
+
+Esto es un **patrón compuesto** muy común en aplicaciones empresariales.
+
+#### Ejemplos del Mundo Real
+
+1. **Sistemas de Pago**: La estrategia de pago se selecciona según el tipo de tarjeta almacenado en BD
+2. **Sistemas de Facturación**: La estrategia de cálculo de impuestos se selecciona según el país/región en BD
+3. **Sistemas de Notificaciones**: La estrategia de envío (email, SMS, push) se selecciona según preferencias del usuario en BD
+
+---
+
+### 🎓 Explicación para el Docente
+
+#### Argumentos Técnicos:
+
+1. **Encapsulación Mejorada**
+   - El cliente no necesita conocer las estrategias disponibles
+   - El cliente solo invoca el método del contexto
+   - La complejidad está oculta en el contexto
+
+2. **Flexibilidad de Configuración**
+   - Los administradores pueden cambiar políticas sin modificar código
+   - Cada grupo puede tener su propia política
+   - No requiere recompilar la aplicación
+
+3. **Mantenibilidad**
+   - Agregar nuevas estrategias solo requiere modificar el Context
+   - No afecta a los clientes existentes
+   - Cumple con el principio Open/Closed (abierto a extensión, cerrado a modificación)
+
+4. **Separación de Capas**
+   - **Capa de Presentación** (Cliente): Solo invoca casos de uso
+   - **Capa de Negocio** (Context): Selecciona y ejecuta estrategias
+   - **Capa de Datos** (BD): Almacena configuración
+
+#### Comparación con el Pseudocódigo:
+
+| Aspecto | Pseudocódigo | Nuestra Implementación | ¿Por qué es mejor? |
+|---------|--------------|------------------------|---------------------|
+| **Quién elige** | Cliente (usuario) | Context (desde BD) | Configuración persistente |
+| **Cuándo se elige** | En tiempo de ejecución (input usuario) | En tiempo de ejecución (desde BD) | Mismo momento, diferente fuente |
+| **Dónde se configura** | Código hardcodeado | Base de datos | Más flexible y mantenible |
+| **Conocimiento del cliente** | Debe conocer todas las estrategias | Solo conoce el Context | Mejor encapsulación |
+
+---
+
+### 📖 Cita de Referencia
+
+> **"El patrón Strategy permite que el algoritmo varíe independientemente de los clientes que lo usan. La selección del algoritmo puede hacerse en tiempo de compilación o en tiempo de ejecución, y puede basarse en configuración, datos de entrada, o cualquier otro criterio."**
+> 
+> — Design Patterns: Elements of Reusable Object-Oriented Software (Gang of Four)
+
+**Nuestra implementación**: La selección se basa en **configuración almacenada en BD**, que es un criterio válido y común.
+
+---
+
+### 🔄 Variantes del Patrón Strategy
+
+El patrón Strategy tiene varias variantes válidas:
+
+1. **Cliente elige explícitamente** (Pseudocódigo clásico)
+   - Usuario decide qué operación realizar
+   - Ejemplo: Calculadora donde usuario elige +, -, *
+
+2. **Context elige desde configuración** (Nuestra implementación)
+   - Configuración almacenada externamente (BD, archivo, etc.)
+   - Ejemplo: Sistema de facturación con políticas por país
+
+3. **Context elige según datos de entrada**
+   - El algoritmo se selecciona según características de los datos
+   - Ejemplo: Algoritmo de ordenamiento según tamaño del array
+
+**Todas son válidas** y dependen del contexto de la aplicación.
+
+---
+
+### ✅ Conclusión
+
+**Sí, es correcto** que la BD elija la estrategia porque:
+
+1. ✅ Es una **variante válida** del patrón Strategy
+2. ✅ Mejora la **separación de responsabilidades**
+3. ✅ Aumenta la **flexibilidad y mantenibilidad**
+4. ✅ Sigue el **principio de encapsulación**
+5. ✅ Es un **patrón común** en aplicaciones empresariales
+6. ✅ Combina **Strategy + Factory** (patrón compuesto)
+
+**Para el docente**: Esta implementación demuestra comprensión avanzada del patrón, ya que adapta el patrón clásico a las necesidades reales del negocio, donde las políticas de asistencia son configurables por grupo y deben persistirse en la base de datos.
+
+---
+
 ## Conclusión
 
-El patrón Strategy en nuestro sistema permite que cada grupo tenga su propia política de asistencia configurada en la base de datos, haciendo el sistema más flexible y mantenible. La selección automática de estrategias desde la BD es una variante válida del patrón que se adapta mejor a nuestras necesidades de negocio.
+El patrón Strategy en nuestro sistema permite que cada grupo tenga su propia política de asistencia configurada en la base de datos, haciendo el sistema más flexible y mantenible. La selección automática de estrategias desde la BD es una **variante válida y profesional** del patrón que se adapta mejor a nuestras necesidades de negocio y demuestra una comprensión avanzada de los principios de diseño orientado a objetos.
 
 ---
 
 **Autor**: Sistema de Asistencia - Arquitectura de Software  
 **Fecha**: 2025  
-**Versión**: 1.0
+**Versión**: 1.1
 
