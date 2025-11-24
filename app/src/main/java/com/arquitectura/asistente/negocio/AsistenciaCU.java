@@ -165,6 +165,17 @@ public class AsistenciaCU {
     }
 
     /**
+     * Verifica si ya existe una asistencia marcada para un alumno, grupo y fecha
+     * @param alumnoId ID del alumno
+     * @param grupoId ID del grupo
+     * @param fecha Fecha en formato YYYY-MM-DD
+     * @return La asistencia existente o null si no existe
+     */
+    public Asistencia obtenerAsistenciaExistente(Integer alumnoId, Integer grupoId, String fecha) {
+        return Asistencia.obtenerAsistenciaExistente(alumnoId, grupoId, fecha);
+    }
+
+    /**
      * Obtiene el día de la semana en español desde una fecha en formato YYYY-MM-DD
      * @param fecha Fecha en formato YYYY-MM-DD
      * @return Día de la semana en español: "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"

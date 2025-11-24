@@ -223,6 +223,38 @@ public class Asistencia {
     }
 
     /**
+     * Verifica si ya existe una asistencia marcada para un alumno, grupo y fecha específicos
+     * @param alumnoId ID del alumno
+     * @param grupoId ID del grupo
+     * @param fecha Fecha en formato YYYY-MM-DD
+     * @return La asistencia existente o null si no existe
+     */
+    public static Asistencia obtenerAsistenciaExistente(Integer alumnoId, Integer grupoId, String fecha) {
+        verificarInicializacion();
+        
+        String sql = "SELECT * FROM asistencias WHERE alumno_id = ? AND grupo_id = ? AND fecha = ? LIMIT 1";
+        SQLiteDatabase db = baseDAO.getReadableDatabase();
+        
+        try (Cursor cursor = db.rawQuery(sql, new String[]{
+                String.valueOf(alumnoId),
+                String.valueOf(grupoId),
+                fecha
+        })) {
+            if (cursor.moveToFirst()) {
+                Asistencia asistencia = mapCursorToAsistencia(cursor);
+                Log.d(TAG, "Asistencia ya existe - Alumno: " + alumnoId + ", Grupo: " + grupoId + ", Fecha: " + fecha);
+                return asistencia;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al verificar asistencia existente - Alumno: " + alumnoId + ", Grupo: " + grupoId + ", Fecha: " + fecha, e);
+        } finally {
+            db.close();
+        }
+        
+        return null;
+    }
+
+    /**
      * Mapea un Cursor a un objeto Asistencia
      */
     private static Asistencia mapCursorToAsistencia(Cursor cursor) {

@@ -279,13 +279,13 @@ public class DatabaseSeeder {
         
         for (int i = 0; i < gruposEstudiante1.length; i++) {
             int grupoId = gruposEstudiante1[i];
-            sql.append(String.format("(%d, 'Domingo', '23:00', '00:00')", grupoId));
+            sql.append(String.format("(%d, 'Domingo', '23:50', '01:00')", grupoId));
             if (i < gruposEstudiante1.length - 1) sql.append(", ");
         }
         
         try {
             db.execSQL(sql.toString());
-            Log.d(TAG, "Horario especial domingo 23:00-00:00 agregado para grupos del estudiante 1");
+            Log.d(TAG, "Horario especial domingo 23:50-01:00 agregado para grupos del estudiante 1");
         } catch (Exception e) {
             Log.w(TAG, "Error al insertar horario especial del estudiante 1: " + e.getMessage(), e);
             throw new RuntimeException("Error al insertar horario especial del estudiante 1", e);

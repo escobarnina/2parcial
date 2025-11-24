@@ -145,6 +145,16 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String hora = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
             
+            // Verificar si ya existe una asistencia marcada para este día
+            com.arquitectura.asistente.datos.Asistencia asistenciaExistente = 
+                asistenciaCU.obtenerAsistenciaExistente(ESTUDIANTE_ID, grupo.getId(), fecha);
+            
+            if (asistenciaExistente != null) {
+                // Ya existe asistencia marcada, mostrar diálogo informativo
+                mostrarDialogoAsistenciaYaMarcada(grupo, asistenciaExistente);
+                return;
+            }
+            
             // Verificar si hay horario para el día actual
             Horario horario = asistenciaCU.obtenerHorarioPorFecha(grupo.getId(), fecha);
             if (horario == null) {
@@ -283,6 +293,84 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         tvMensaje.setText(getString(R.string.dialog_sin_horario_mensaje));
         tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
         tvDia.setText("Día: " + diaSemana + " (" + fecha + ")");
+        
+        // Botón aceptar
+        btnAceptar.setOnClickListener(v -> dialog.dismiss());
+        
+        // Mostrar diálogo
+        dialog.show();
+    }
+
+    /**
+     * Muestra un diálogo cuando la asistencia ya fue marcada anteriormente
+     */
+    private void mostrarDialogoAsistenciaYaMarcada(Grupo grupo, com.arquitectura.asistente.datos.Asistencia asistencia) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_asistencia);
+        dialog.setCancelable(true);
+        
+        // Configurar ventana del diálogo con fondo blanco sólido
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setDimAmount(0.6f);
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+        
+        // Obtener vistas
+        MaterialCardView cardIcono = dialog.findViewById(R.id.cardIconoEstado);
+        ImageView ivIcono = dialog.findViewById(R.id.ivIconoEstado);
+        TextView tvTitulo = dialog.findViewById(R.id.tvTituloEstado);
+        TextView tvMateria = dialog.findViewById(R.id.tvMateriaInfo);
+        TextView tvHoraMarcada = dialog.findViewById(R.id.tvHoraMarcada);
+        TextView tvHorarioClase = dialog.findViewById(R.id.tvHorarioClase);
+        MaterialButton btnAceptar = dialog.findViewById(R.id.btnAceptar);
+        
+        // Obtener horario para mostrar
+        String fecha = asistencia.getFecha();
+        Horario horario = asistenciaCU.obtenerHorarioPorFecha(grupo.getId(), fecha);
+        String horarioClase = horario != null ? horario.getHoraInicio() + " - " + horario.getHoraFin() : "N/A";
+        
+        // Configurar según el estado de la asistencia existente
+        String estado = asistencia.getEstado();
+        switch (estado) {
+            case "PRESENTE":
+                cardIcono.setCardBackgroundColor(Color.parseColor("#E8F5E9")); // Verde claro
+                ivIcono.setImageResource(R.drawable.ic_check_circle_24);
+                ivIcono.setColorFilter(Color.parseColor("#4CAF50")); // Verde
+                tvTitulo.setText("Asistencia Ya Marcada");
+                tvTitulo.setTextColor(Color.parseColor("#4CAF50"));
+                break;
+            case "RETRASO":
+                cardIcono.setCardBackgroundColor(Color.parseColor("#FFF3E0")); // Naranja claro
+                ivIcono.setImageResource(R.drawable.ic_access_time_24);
+                ivIcono.setColorFilter(Color.parseColor("#FF9800")); // Naranja
+                tvTitulo.setText("Asistencia Ya Marcada (Retraso)");
+                tvTitulo.setTextColor(Color.parseColor("#FF9800"));
+                break;
+            case "FALTA":
+                cardIcono.setCardBackgroundColor(Color.parseColor("#FFEBEE")); // Rojo claro
+                ivIcono.setImageResource(R.drawable.ic_cancel_24);
+                ivIcono.setColorFilter(Color.parseColor("#F44336")); // Rojo
+                tvTitulo.setText("Asistencia Ya Marcada (Falta)");
+                tvTitulo.setTextColor(Color.parseColor("#F44336"));
+                break;
+            default:
+                cardIcono.setCardBackgroundColor(Color.parseColor("#F5F5F5")); // Gris claro
+                ivIcono.setImageResource(R.drawable.ic_check_circle_24);
+                ivIcono.setColorFilter(Color.parseColor("#757575")); // Gris
+                tvTitulo.setText("Asistencia Ya Marcada");
+                tvTitulo.setTextColor(Color.parseColor("#757575"));
+        }
+        
+        // Configurar información
+        tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
+        tvHoraMarcada.setText(asistencia.getHoraMarcada());
+        tvHorarioClase.setText(horarioClase);
         
         // Botón aceptar
         btnAceptar.setOnClickListener(v -> dialog.dismiss());
