@@ -94,6 +94,9 @@ public class AsistenciaCU {
      */
     public boolean marcarAsistencia(Integer alumnoId, Integer grupoId, String fecha, String horaMarcado) {
         try {
+            // Limpiar el estado anterior para evitar confusiones
+            this.ultimoEstadoCalculado = null;
+            
             // Validar que el alumno esté inscrito en el grupo
             boolean inscrito = Asistencia.estaInscrito(alumnoId, grupoId);
             Log.d(TAG, "Validando inscripción - Alumno: " + alumnoId + ", Grupo: " + grupoId + ", Inscrito: " + inscrito);
@@ -131,21 +134,22 @@ public class AsistenciaCU {
 
             // Obtener tipo de estrategia del grupo
             String tipoEstrategia = Grupo.obtenerTipoEstrategiaGrupo(grupoId);
+            Log.d(TAG, "Tipo de estrategia del grupo " + grupoId + ": " + tipoEstrategia);
 
-            // Configurar estrategia automáticamente desde BD si no está configurada
-            if (estrategia == null) {
-                Log.d(TAG, "Configurando estrategia desde BD: " + tipoEstrategia);
-                switch (tipoEstrategia) {
-                    case "PRESENTE":
-                        estrategia = new EstrategiaPresente();
-                        break;
-                    case "FALTA":
-                        estrategia = new EstrategiaFalta();
-                        break;
-                    default:
-                        estrategia = new EstrategiaRetraso();
-                }
+            // Configurar estrategia automáticamente desde BD según el grupo actual
+            // IMPORTANTE: Cada grupo puede tener una estrategia diferente, por lo que
+            // debemos actualizar la estrategia cada vez que se marca asistencia
+            switch (tipoEstrategia) {
+                case "PRESENTE":
+                    estrategia = new EstrategiaPresente();
+                    break;
+                case "FALTA":
+                    estrategia = new EstrategiaFalta();
+                    break;
+                default:
+                    estrategia = new EstrategiaRetraso();
             }
+            Log.d(TAG, "Estrategia configurada para grupo " + grupoId + ": " + estrategia.getClass().getSimpleName());
 
             // Delegar el cálculo del estado a la estrategia (Strategy Pattern)
             String estado = estrategia.calcularEstado(horaMarcado, horaInicio, horaFin);
