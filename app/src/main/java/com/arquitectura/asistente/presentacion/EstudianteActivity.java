@@ -1,8 +1,14 @@
 package com.arquitectura.asistente.presentacion;
 
+import android.app.Dialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.Window;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -10,8 +16,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
+import com.arquitectura.asistente.datos.Horario;
 import com.arquitectura.asistente.negocio.AsistenciaCU;
 import com.arquitectura.asistente.presentacion.widget.GrupoAdapter;
 
@@ -47,6 +56,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         // Inicializar casos de uso y acceso a datos
         this.asistenciaCU = new AsistenciaCU(this);
         Grupo.inicializar(this);
+        Horario.inicializar(this);
         
         inicializarVistas();
         cargarGruposInscritos();
@@ -119,6 +129,14 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String hora = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
             
+            // Obtener horario del grupo para mostrar en el diálogo
+            List<Horario> horarios = Horario.obtenerHorariosGrupo(grupo.getId());
+            String horarioClase = "No disponible";
+            if (!horarios.isEmpty()) {
+                Horario horario = horarios.get(0);
+                horarioClase = horario.getHoraInicio() + " - " + horario.getHoraFin();
+            }
+            
             // Marcar asistencia usando el caso de uso
             boolean exito = asistenciaCU.marcarAsistencia(
                 ESTUDIANTE_ID,
@@ -128,16 +146,87 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             );
             
             if (exito) {
-                Toast.makeText(this, 
-                    "Asistencia marcada: " + grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo() + 
-                    "\nHora: " + hora, 
-                    Toast.LENGTH_LONG).show();
+                // Obtener el estado calculado por la estrategia
+                String estado = asistenciaCU.getUltimoEstadoCalculado();
+                if (estado == null) {
+                    estado = "PRESENTE"; // Fallback
+                }
+                
+                mostrarDialogoAsistencia(grupo, hora, horarioClase, estado);
             } else {
                 Toast.makeText(this, getString(R.string.asistencia_error), Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Muestra un diálogo Material Design con el estado de la asistencia
+     */
+    private void mostrarDialogoAsistencia(Grupo grupo, String horaMarcada, String horarioClase, String estado) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_asistencia);
+        dialog.setCancelable(true);
+        
+        // Configurar ventana del diálogo con fondo blanco sólido
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            // Agregar fondo semitransparente oscuro detrás del diálogo
+            window.setDimAmount(0.6f);
+            // Asegurar que el diálogo tenga el ancho correcto
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+        
+        // Obtener vistas
+        MaterialCardView cardIcono = dialog.findViewById(R.id.cardIconoEstado);
+        ImageView ivIcono = dialog.findViewById(R.id.ivIconoEstado);
+        TextView tvTitulo = dialog.findViewById(R.id.tvTituloEstado);
+        TextView tvMateria = dialog.findViewById(R.id.tvMateriaInfo);
+        TextView tvHoraMarcada = dialog.findViewById(R.id.tvHoraMarcada);
+        TextView tvHorarioClase = dialog.findViewById(R.id.tvHorarioClase);
+        MaterialButton btnAceptar = dialog.findViewById(R.id.btnAceptar);
+        
+        // Configurar según el estado
+        switch (estado) {
+            case "PRESENTE":
+                cardIcono.setCardBackgroundColor(Color.parseColor("#E8F5E9")); // Verde claro
+                ivIcono.setImageResource(R.drawable.ic_check_circle_24);
+                ivIcono.setColorFilter(Color.parseColor("#4CAF50")); // Verde
+                tvTitulo.setText("Asistencia Marcada");
+                tvTitulo.setTextColor(Color.parseColor("#4CAF50"));
+                break;
+            case "RETRASO":
+                cardIcono.setCardBackgroundColor(Color.parseColor("#FFF3E0")); // Naranja claro
+                ivIcono.setImageResource(R.drawable.ic_access_time_24);
+                ivIcono.setColorFilter(Color.parseColor("#FF9800")); // Naranja
+                tvTitulo.setText("Asistencia con Retraso");
+                tvTitulo.setTextColor(Color.parseColor("#FF9800"));
+                break;
+            case "FALTA":
+                cardIcono.setCardBackgroundColor(Color.parseColor("#FFEBEE")); // Rojo claro
+                ivIcono.setImageResource(R.drawable.ic_cancel_24);
+                ivIcono.setColorFilter(Color.parseColor("#F44336")); // Rojo
+                tvTitulo.setText("Asistencia Marcada como Falta");
+                tvTitulo.setTextColor(Color.parseColor("#F44336"));
+                break;
+        }
+        
+        // Configurar información
+        tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
+        tvHoraMarcada.setText(horaMarcada);
+        tvHorarioClase.setText(horarioClase);
+        
+        // Botón aceptar
+        btnAceptar.setOnClickListener(v -> dialog.dismiss());
+        
+        // Mostrar diálogo
+        dialog.show();
     }
 }
 

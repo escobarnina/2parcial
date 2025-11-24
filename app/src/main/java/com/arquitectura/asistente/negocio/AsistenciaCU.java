@@ -21,6 +21,7 @@ import java.util.List;
 public class AsistenciaCU {
     private static final String TAG = "AsistenciaCU";
     private IEstrategiaAsistencia estrategia;
+    private String ultimoEstadoCalculado; // Para poder obtener el estado después de marcar
 
     public AsistenciaCU(Context context) {
         // Inicializar acceso a datos de todas las entidades necesarias
@@ -94,6 +95,9 @@ public class AsistenciaCU {
 
             Asistencia.guardar(asistencia);
             Log.d(TAG, "Asistencia marcada exitosamente");
+            
+            // Guardar el estado en la instancia para poder retornarlo
+            this.ultimoEstadoCalculado = estado;
             return true;
 
         } catch (Exception e) {
@@ -114,6 +118,14 @@ public class AsistenciaCU {
      */
     public List<Asistencia> obtenerAsistenciasPorAlumno(Integer alumnoId) {
         return Asistencia.obtenerPorAlumno(alumnoId);
+    }
+
+    /**
+     * Obtiene el último estado calculado después de marcar asistencia
+     * @return Estado calculado: "PRESENTE", "RETRASO" o "FALTA"
+     */
+    public String getUltimoEstadoCalculado() {
+        return ultimoEstadoCalculado;
     }
 }
 

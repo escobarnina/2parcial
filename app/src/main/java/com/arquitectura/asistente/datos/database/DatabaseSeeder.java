@@ -168,22 +168,22 @@ public class DatabaseSeeder {
         String sql = "INSERT INTO grupos(materia_id, docente_id, semestre, gestion, capacidad, grupo, tolerancia_minutos, tipo_estrategia) VALUES " +
                 // Docente 1 (Marcos Rodríguez - id=61)
                 "(1, 61, 1, 2025, 35, 'A', 10, 'RETRASO'), " +  // Programación I
-                "(2, 61, 1, 2025, 30, 'A', 10, 'RETRASO'), " +  // Programación II
+                "(2, 61, 1, 2025, 30, 'A', 10, 'FALTA'), " +  // Programación II
                 "(7, 61, 1, 2025, 25, 'A', 5, 'RETRASO'), " +   // Algoritmos
                 // Docente 2 (María Fernández - id=62)
-                "(1, 62, 1, 2025, 30, 'B', 15, 'PRESENTE'), " + // Programación I
+                "(1, 62, 1, 2025, 30, 'B', 15, 'FALTA'), " + // Programación I
                 "(4, 62, 1, 2025, 35, 'A', 10, 'PRESENTE'), " + // Base de Datos I
-                "(5, 62, 1, 2025, 28, 'A', 10, 'RETRASO'), " +  // Base de Datos II
+                "(5, 62, 1, 2025, 28, 'A', 10, 'FALTA'), " +  // Base de Datos II
                 "(10, 62, 1, 2025, 30, 'A', 15, 'RETRASO'), " +  // Ingeniería de Software
                 // Docente 3 (Julia Martínez - id=63)
                 "(2, 63, 1, 2025, 32, 'B', 20, 'FALTA'), " +     // Programación II
                 "(6, 63, 1, 2025, 30, 'A', 10, 'FALTA'), " +     // Estructura de Datos
-                "(11, 63, 1, 2025, 35, 'A', 10, 'RETRASO'), " +   // Arquitectura
+                "(11, 63, 1, 2025, 35, 'A', 10, 'PRESENTE'), " +   // Arquitectura
                 "(20, 63, 1, 2025, 40, 'A', 10, 'RETRASO'), " +   // Gestión de Proyectos
                 // Docente 4 (Roberto Sánchez - id=64)
                 "(4, 64, 1, 2025, 30, 'B', 15, 'RETRASO'), " +    // Base de Datos I
-                "(8, 64, 1, 2025, 28, 'A', 10, 'RETRASO'), " +    // Sistemas Operativos
-                "(12, 64, 1, 2025, 40, 'A', 10, 'RETRASO'), " +   // Matemática Discreta
+                "(8, 64, 1, 2025, 28, 'A', 10, 'PRESENTE'), " +    // Sistemas Operativos
+                "(12, 64, 1, 2025, 40, 'A', 10, 'FALTA'), " +   // Matemática Discreta
                 // Docente 5 (Laura González - id=65)
                 "(8, 65, 1, 2025, 30, 'B', 15, 'PRESENTE'), " +  // Sistemas Operativos
                 "(9, 65, 1, 2025, 32, 'A', 10, 'RETRASO'), " +    // Redes
@@ -191,21 +191,21 @@ public class DatabaseSeeder {
                 // Docente 6 (Carlos López - id=66)
                 "(9, 66, 1, 2025, 30, 'B', 10, 'RETRASO'), " +    // Redes
                 "(14, 66, 1, 2025, 35, 'A', 10, 'RETRASO'), " +   // Cálculo II
-                "(15, 66, 1, 2025, 32, 'A', 10, 'RETRASO'), " +   // Algebra Lineal
+                "(15, 66, 1, 2025, 32, 'A', 10, 'PRESENTE'), " +   // Algebra Lineal
                 // Docente 7 (Ana García - id=67)
                 "(16, 67, 1, 2025, 40, 'A', 10, 'RETRASO'), " +   // Física I
-                "(17, 67, 1, 2025, 38, 'A', 10, 'RETRASO'), " +   // Física II
+                "(17, 67, 1, 2025, 38, 'A', 10, 'FALTA'), " +   // Física II
                 "(18, 67, 1, 2025, 42, 'A', 15, 'RETRASO'), " +   // Química
                 // Docente 8 (José Pérez - id=68)
-                "(3, 68, 1, 2025, 25, 'A', 5, 'RETRASO'), " +     // Programación III
+                "(3, 68, 1, 2025, 25, 'A', 5, 'PRESENTE'), " +     // Programación III
                 "(19, 68, 1, 2025, 50, 'A', 20, 'PRESENTE'), " +  // Ética Profesional
                 // Docente 9 (Elena Ruiz - id=69)
                 "(6, 69, 1, 2025, 30, 'B', 20, 'RETRASO'), " +     // Estructura de Datos
-                "(10, 69, 1, 2025, 28, 'B', 15, 'RETRASO'), " +    // Ingeniería de Software
+                "(10, 69, 1, 2025, 28, 'B', 15, 'PRESENTE'), " +    // Ingeniería de Software
                 // Docente 10 (Miguel Hernández - id=70)
-                "(12, 70, 1, 2025, 40, 'B', 10, 'RETRASO'), " +   // Matemática Discreta
-                "(13, 70, 1, 2025, 45, 'B', 15, 'RETRASO'), " +   // Cálculo I
-                "(20, 70, 1, 2025, 35, 'B', 10, 'RETRASO')";      // Gestión de Proyectos
+                "(12, 70, 1, 2025, 40, 'B', 10, 'FALTA'), " +   // Matemática Discreta
+                "(13, 70, 1, 2025, 45, 'B', 15, 'FALTA'), " +   // Cálculo I
+                "(20, 70, 1, 2025, 35, 'B', 10, 'PRESENTE')";      // Gestión de Proyectos
 
         try {
             db.execSQL(sql);
@@ -569,7 +569,7 @@ public class DatabaseSeeder {
         sql.append("(17, 1, '2025-01-20', '07:28', 'RETRASO'), ");
         sql.append("(18, 1, '2025-01-20', '07:06', 'PRESENTE'), ");
         sql.append("(19, 1, '2025-01-20', '07:14', 'PRESENTE'), ");
-        sql.append("(20, 1, '2025-01-20', '07:35', 'FALTA'), "); // Después de tolerancia
+        sql.append("(20, 1, '2025-01-20', '07:35', 'FALTA') "); // Después de tolerancia
         
         sql.append(", ");
         

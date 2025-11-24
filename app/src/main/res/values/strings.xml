@@ -27,6 +27,14 @@
     <string name="exportacion_exito">Archivo exportado exitosamente</string>
     <string name="exportacion_error">Error al exportar archivo</string>
     
+    <!-- Diálogo de Asistencia -->
+    <string name="dialog_asistencia_titulo_presente">Asistencia Marcada</string>
+    <string name="dialog_asistencia_titulo_retraso">Asistencia con Retraso</string>
+    <string name="dialog_asistencia_titulo_falta">Asistencia Marcada como Falta</string>
+    <string name="dialog_asistencia_hora_marcada">Hora marcada:</string>
+    <string name="dialog_asistencia_horario_clase">Horario de clase:</string>
+    <string name="dialog_asistencia_aceptar">Aceptar</string>
+    
     <!-- Acciones -->
     <string name="ingresar">Ingresar</string>
 </resources>
