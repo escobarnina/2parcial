@@ -129,6 +129,19 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
 
     private void marcarAsistencia(Grupo grupo) {
         try {
+            // Validar que el grupo pertenezca al estudiante (doble verificación)
+            if (grupo == null || grupo.getId() == null) {
+                Toast.makeText(this, "Error: Grupo inválido", Toast.LENGTH_LONG).show();
+                return;
+            }
+            
+            // Verificar que el estudiante esté inscrito en este grupo
+            boolean inscrito = com.arquitectura.asistente.datos.Asistencia.estaInscrito(ESTUDIANTE_ID, grupo.getId());
+            if (!inscrito) {
+                Toast.makeText(this, "Error: No estás inscrito en este grupo", Toast.LENGTH_LONG).show();
+                return;
+            }
+            
             String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String hora = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
             
