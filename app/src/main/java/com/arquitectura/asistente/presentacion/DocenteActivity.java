@@ -50,7 +50,7 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
     
     // ID del docente (en una app real, esto vendría del login)
     // Docente 2 (María Fernández, id=62) tiene 4 materias - el que más tiene
-    private static final Integer DOCENTE_ID = 62; // María Fernández - 4 materias (Programación I, BD I, BD II, Ing. Software)
+    private static final Integer DOCENTE_ID = 63; // María Fernández - 4 materias (Programación I, BD I, BD II, Ing. Software)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
