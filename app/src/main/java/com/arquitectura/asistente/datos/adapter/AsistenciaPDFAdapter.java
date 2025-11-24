@@ -1,6 +1,5 @@
 package com.arquitectura.asistente.datos.adapter;
 
-import com.arquitectura.asistente.datos.Asistencia;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -20,7 +19,7 @@ public class AsistenciaPDFAdapter implements DataExportAdapter {
     private static final Logger logger = Logger.getLogger(AsistenciaPDFAdapter.class.getName());
 
     @Override
-    public byte[] exportar(List<Asistencia> data, String nombreArchivo) throws Exception {
+    public byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception {
         logger.info("Iniciando exportacion PDF - Cantidad: " + data.size());
         
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -31,25 +30,33 @@ public class AsistenciaPDFAdapter implements DataExportAdapter {
             document.add(new Paragraph("Reporte de Asistencias").setBold().setFontSize(16));
             document.add(new Paragraph(" "));
             
-            // Crear tabla
-            Table table = new Table(6);
+            // Crear tabla con información completa
+            Table table = new Table(10);
             
             // Encabezados
             table.addHeaderCell(new Cell().add(new Paragraph("ID")));
-            table.addHeaderCell(new Cell().add(new Paragraph("ID Alumno")));
-            table.addHeaderCell(new Cell().add(new Paragraph("ID Grupo")));
+            table.addHeaderCell(new Cell().add(new Paragraph("Registro")));
+            table.addHeaderCell(new Cell().add(new Paragraph("Estudiante")));
+            table.addHeaderCell(new Cell().add(new Paragraph("Materia")));
+            table.addHeaderCell(new Cell().add(new Paragraph("Sigla")));
+            table.addHeaderCell(new Cell().add(new Paragraph("Grupo")));
+            table.addHeaderCell(new Cell().add(new Paragraph("Docente")));
             table.addHeaderCell(new Cell().add(new Paragraph("Fecha")));
             table.addHeaderCell(new Cell().add(new Paragraph("Hora")));
             table.addHeaderCell(new Cell().add(new Paragraph("Estado")));
             
-            // Datos
-            for (Asistencia asistencia : data) {
-                table.addCell(new Cell().add(new Paragraph(String.valueOf(asistencia.getId()))));
-                table.addCell(new Cell().add(new Paragraph(String.valueOf(asistencia.getAlumnoId()))));
-                table.addCell(new Cell().add(new Paragraph(String.valueOf(asistencia.getGrupoId()))));
-                table.addCell(new Cell().add(new Paragraph(asistencia.getFecha())));
-                table.addCell(new Cell().add(new Paragraph(asistencia.getHoraMarcada() != null ? asistencia.getHoraMarcada() : "")));
-                table.addCell(new Cell().add(new Paragraph(asistencia.getEstado() != null ? asistencia.getEstado() : "")));
+            // Datos con información completa
+            for (AsistenciaExportDTO dto : data) {
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(dto.getId() != null ? dto.getId() : 0))));
+                table.addCell(new Cell().add(new Paragraph(dto.getAlumnoRegistro() != null ? dto.getAlumnoRegistro() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getAlumnoNombre() != null ? dto.getAlumnoNombre() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getMateriaNombre() != null ? dto.getMateriaNombre() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getMateriaSigla() != null ? dto.getMateriaSigla() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getGrupoParalelo() != null ? dto.getGrupoParalelo() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getDocenteNombre() != null ? dto.getDocenteNombre() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getFecha() != null ? dto.getFecha() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getHoraMarcada() != null ? dto.getHoraMarcada() : "")));
+                table.addCell(new Cell().add(new Paragraph(dto.getEstado() != null ? dto.getEstado() : "")));
             }
             
             document.add(table);

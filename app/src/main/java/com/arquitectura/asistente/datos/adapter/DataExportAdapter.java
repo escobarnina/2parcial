@@ -1,6 +1,5 @@
 package com.arquitectura.asistente.datos.adapter;
 
-import com.arquitectura.asistente.datos.Asistencia;
 import java.util.List;
 
 /**
@@ -13,12 +12,12 @@ public interface DataExportAdapter {
     /**
      * Exporta los datos a un formato específico
      * 
-     * @param data Lista de asistencias a exportar
+     * @param data Lista de DTOs de asistencias con información completa para exportar
      * @param nombreArchivo Nombre base del archivo (sin extensión)
      * @return byte[] con el contenido del archivo generado
      * @throws Exception Si ocurre un error durante la exportación
      */
-    byte[] exportar(List<Asistencia> data, String nombreArchivo) throws Exception;
+    byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception;
     
     /**
      * Obtiene la extensión del archivo para este formato

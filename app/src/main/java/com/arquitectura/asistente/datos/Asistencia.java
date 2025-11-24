@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.arquitectura.asistente.datos.adapter.AsistenciaExportDTO;
 import com.arquitectura.asistente.datos.database.DatabaseBaseDAO;
 
 import java.util.ArrayList;
@@ -256,6 +257,111 @@ public class Asistencia {
         }
         
         return null;
+    }
+
+    /**
+     * Obtiene todas las asistencias de un grupo con información completa para exportación
+     * Hace JOINs con las tablas relacionadas para obtener nombres, materias, grupos, etc.
+     * Retorna un DTO específico para exportación sin modificar la entidad Asistencia
+     * 
+     * @param grupoId ID del grupo
+     * @return Lista de AsistenciaExportDTO con información completa
+     */
+    public static List<AsistenciaExportDTO> obtenerPorGrupoParaExportacion(Integer grupoId) {
+        verificarInicializacion();
+        
+        List<AsistenciaExportDTO> asistenciasDTO = new ArrayList<>();
+        SQLiteDatabase db = baseDAO.getReadableDatabase();
+        
+        // Consulta con JOINs para obtener información completa
+        String sql = "SELECT " +
+                    "a.id, " +
+                    "a.alumno_id, " +
+                    "a.grupo_id, " +
+                    "a.fecha, " +
+                    "a.hora_marcada, " +
+                    "a.estado, " +
+                    "u.nombres || ' ' || u.apellidos as alumno_nombre, " +
+                    "u.registro as alumno_registro, " +
+                    "m.nombre as materia_nombre, " +
+                    "m.sigla as materia_sigla, " +
+                    "g.grupo as grupo_paralelo, " +
+                    "ud.nombres || ' ' || ud.apellidos as docente_nombre " +
+                    "FROM asistencias a " +
+                    "INNER JOIN usuarios u ON a.alumno_id = u.id " +
+                    "INNER JOIN grupos g ON a.grupo_id = g.id " +
+                    "INNER JOIN materias m ON g.materia_id = m.id " +
+                    "INNER JOIN usuarios ud ON g.docente_id = ud.id " +
+                    "WHERE a.grupo_id = ? " +
+                    "ORDER BY u.apellidos, u.nombres, a.fecha DESC";
+        
+        try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(grupoId)})) {
+            while (cursor.moveToNext()) {
+                asistenciasDTO.add(mapCursorToAsistenciaExportDTO(cursor));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al obtener asistencias para exportación - Grupo: " + grupoId, e);
+        } finally {
+            db.close();
+        }
+        
+        return asistenciasDTO;
+    }
+
+    /**
+     * Mapea un Cursor a un objeto AsistenciaExportDTO con información completa
+     */
+    private static AsistenciaExportDTO mapCursorToAsistenciaExportDTO(Cursor cursor) {
+        AsistenciaExportDTO dto = new AsistenciaExportDTO();
+        
+        // Campos básicos
+        dto.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+        dto.setAlumnoId(cursor.getInt(cursor.getColumnIndexOrThrow("alumno_id")));
+        dto.setGrupoId(cursor.getInt(cursor.getColumnIndexOrThrow("grupo_id")));
+        dto.setFecha(cursor.getString(cursor.getColumnIndexOrThrow("fecha")));
+        
+        int horaIndex = cursor.getColumnIndex("hora_marcada");
+        if (horaIndex >= 0 && !cursor.isNull(horaIndex)) {
+            dto.setHoraMarcada(cursor.getString(horaIndex));
+        }
+        
+        int estadoIndex = cursor.getColumnIndex("estado");
+        if (estadoIndex >= 0 && !cursor.isNull(estadoIndex)) {
+            dto.setEstado(cursor.getString(estadoIndex));
+        }
+        
+        // Campos adicionales de JOINs
+        int alumnoNombreIndex = cursor.getColumnIndex("alumno_nombre");
+        if (alumnoNombreIndex >= 0 && !cursor.isNull(alumnoNombreIndex)) {
+            dto.setAlumnoNombre(cursor.getString(alumnoNombreIndex));
+        }
+        
+        int alumnoRegistroIndex = cursor.getColumnIndex("alumno_registro");
+        if (alumnoRegistroIndex >= 0 && !cursor.isNull(alumnoRegistroIndex)) {
+            dto.setAlumnoRegistro(cursor.getString(alumnoRegistroIndex));
+        }
+        
+        int materiaNombreIndex = cursor.getColumnIndex("materia_nombre");
+        if (materiaNombreIndex >= 0 && !cursor.isNull(materiaNombreIndex)) {
+            dto.setMateriaNombre(cursor.getString(materiaNombreIndex));
+        }
+        
+        int materiaSiglaIndex = cursor.getColumnIndex("materia_sigla");
+        if (materiaSiglaIndex >= 0 && !cursor.isNull(materiaSiglaIndex)) {
+            dto.setMateriaSigla(cursor.getString(materiaSiglaIndex));
+        }
+        
+        int grupoParaleloIndex = cursor.getColumnIndex("grupo_paralelo");
+        if (grupoParaleloIndex >= 0 && !cursor.isNull(grupoParaleloIndex)) {
+            dto.setGrupoParalelo(cursor.getString(grupoParaleloIndex));
+        }
+        
+        int docenteNombreIndex = cursor.getColumnIndex("docente_nombre");
+        if (docenteNombreIndex >= 0 && !cursor.isNull(docenteNombreIndex)) {
+            dto.setDocenteNombre(cursor.getString(docenteNombreIndex));
+        }
+        
+        return dto;
     }
 
     /**

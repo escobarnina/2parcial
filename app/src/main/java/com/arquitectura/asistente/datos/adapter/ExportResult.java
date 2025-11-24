@@ -1,8 +1,11 @@
-package com.arquitectura.asistente.negocio;
+package com.arquitectura.asistente.datos.adapter;
 
 /**
  * Clase que representa el resultado de una operación de exportación
- * Capa de Negocio - Resultado de operación de negocio
+ * Capa de Datos - Adapter Pattern - Resultado de exportación
+ * 
+ * Esta clase está en la carpeta adapter porque representa el resultado
+ * específico del patrón Adapter usado para exportación de datos.
  */
 public class ExportResult {
     private boolean success;

@@ -1,36 +1,40 @@
 package com.arquitectura.asistente.presentacion;
 
+import android.app.Dialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
+import android.view.Window;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
+import com.arquitectura.asistente.datos.Horario;
 import com.arquitectura.asistente.datos.adapter.AsistenciaExcelAdapter;
 import com.arquitectura.asistente.datos.adapter.AsistenciaPDFAdapter;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
 import com.arquitectura.asistente.datos.database.DatabaseBaseDAO;
-import com.arquitectura.asistente.negocio.ExportResult;
+import com.arquitectura.asistente.datos.adapter.ExportResult;
 import com.arquitectura.asistente.negocio.ExportarAsistenciaCU;
+import com.arquitectura.asistente.presentacion.widget.GrupoAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * DocenteActivity - Capa de Presentación
- * Permite a los docentes exportar reportes de asistencia por materia
+ * Permite a los docentes ver sus grupos asignados y exportar reportes de asistencia por materia
+ * Similar a EstudianteActivity pero con funcionalidad de exportación
  */
-public class DocenteActivity extends AppCompatActivity {
-    private Spinner spinnerMaterias;
-    private MaterialButton btnExportarExcel;
-    private MaterialButton btnExportarPDF;
+public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.OnGrupoClickListener {
+    private RecyclerView recyclerViewGrupos;
+    private GrupoAdapter grupoAdapter;
     private ExportarAsistenciaCU exportarCU;
     
     // ID del docente (en una app real, esto vendría del login)
@@ -42,75 +46,91 @@ public class DocenteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_docente);
         
-        // Inicializar casos de uso
+        // Inicializar casos de uso y acceso a datos
         this.exportarCU = new ExportarAsistenciaCU(this);
         Grupo.inicializar(this);
+        Horario.inicializar(this);
         
         inicializarVistas();
-        cargarMateriasAsignadas();
-        configurarEventos();
+        cargarGruposAsignados();
     }
 
     private void inicializarVistas() {
-        spinnerMaterias = findViewById(R.id.spinnerMaterias);
-        btnExportarExcel = findViewById(R.id.btnExportarExcel);
-        btnExportarPDF = findViewById(R.id.btnExportarPDF);
+        recyclerViewGrupos = findViewById(R.id.recyclerViewGrupos);
+        
+        // Configurar RecyclerView
+        recyclerViewGrupos.setLayoutManager(new LinearLayoutManager(this));
+        grupoAdapter = new GrupoAdapter(this);
+        grupoAdapter.setContext(this);
+        recyclerViewGrupos.setAdapter(grupoAdapter);
     }
 
-    private void cargarMateriasAsignadas() {
+    private void cargarGruposAsignados() {
         List<Grupo> grupos = obtenerGruposPorDocente(DOCENTE_ID);
         
         if (grupos.isEmpty()) {
             Toast.makeText(this, getString(R.string.docente_sin_materias), Toast.LENGTH_LONG).show();
-            btnExportarExcel.setEnabled(false);
-            btnExportarPDF.setEnabled(false);
             return;
         }
         
-        // Crear lista de strings para el spinner
-        List<String> materiasList = new ArrayList<>();
-        for (Grupo grupo : grupos) {
-            materiasList.add(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
+        grupoAdapter.actualizarGrupos(grupos);
+    }
+
+    @Override
+    public void onGrupoClick(Grupo grupo) {
+        // Mostrar diálogo de exportación al presionar la tarjeta
+        mostrarDialogoExportar(grupo);
+    }
+
+    private void mostrarDialogoExportar(Grupo grupo) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_exportar);
+        dialog.setCancelable(true);
+        
+        // Configurar ventana del diálogo con fondo blanco sólido
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setDimAmount(0.6f);
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT
+            );
         }
         
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-            this,
-            android.R.layout.simple_spinner_item,
-            materiasList
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerMaterias.setAdapter(adapter);
+        // Obtener vistas
+        TextView tvMateriaInfo = dialog.findViewById(R.id.tvMateriaInfo);
+        MaterialButton btnExportarExcel = dialog.findViewById(R.id.btnExportarExcel);
+        MaterialButton btnExportarPDF = dialog.findViewById(R.id.btnExportarPDF);
+        MaterialButton btnCancelar = dialog.findViewById(R.id.btnCancelar);
+        
+        // Configurar información
+        tvMateriaInfo.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
+        
+        // Botón Excel
+        btnExportarExcel.setOnClickListener(v -> {
+            dialog.dismiss();
+            exportarAsistencias(grupo, new AsistenciaExcelAdapter());
+        });
+        
+        // Botón PDF
+        btnExportarPDF.setOnClickListener(v -> {
+            dialog.dismiss();
+            exportarAsistencias(grupo, new AsistenciaPDFAdapter());
+        });
+        
+        // Botón cancelar
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+        
+        // Mostrar diálogo
+        dialog.show();
     }
 
-    private void configurarEventos() {
-        btnExportarExcel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                exportarAsistencias(new AsistenciaExcelAdapter());
-            }
-        });
-
-        btnExportarPDF.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                exportarAsistencias(new AsistenciaPDFAdapter());
-            }
-        });
-    }
-
-    private void exportarAsistencias(DataExportAdapter exportAdapter) {
+    private void exportarAsistencias(Grupo grupo, DataExportAdapter exportAdapter) {
         try {
-            int selectedPosition = spinnerMaterias.getSelectedItemPosition();
-            if (selectedPosition == -1) {
-                Toast.makeText(this, "Por favor selecciona una materia", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
-            List<Grupo> grupos = obtenerGruposPorDocente(DOCENTE_ID);
-            Grupo grupoSeleccionado = grupos.get(selectedPosition);
-            
             // Exportar usando Adapter Pattern
-            ExportResult resultado = exportarCU.exportar(grupoSeleccionado.getId(), exportAdapter);
+            ExportResult resultado = exportarCU.exportar(grupo.getId(), exportAdapter);
             
             if (resultado.isSuccess()) {
                 String mensaje = getString(R.string.exportacion_exito) + "\n" +

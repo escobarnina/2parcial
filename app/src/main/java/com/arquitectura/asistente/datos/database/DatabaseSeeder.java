@@ -4,6 +4,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Responsabilidad: Gestionar los datos iniciales (seeders) de la base de datos SQLite
  * 
@@ -190,7 +193,7 @@ public class DatabaseSeeder {
                 "(13, 65, 1, 2025, 45, 'A', 15, 'RETRASO'), " +   // Cálculo I
                 // Docente 6 (Carlos López - id=66)
                 "(9, 66, 1, 2025, 30, 'B', 10, 'RETRASO'), " +    // Redes
-                "(14, 66, 1, 2025, 35, 'A', 10, 'RETRASO'), " +   // Cálculo II
+                "(14, 66, 1, 2025, 35, 'A', 10, 'FALTA'), " +   // Cálculo II
                 "(15, 66, 1, 2025, 32, 'A', 10, 'PRESENTE'), " +   // Algebra Lineal
                 // Docente 7 (Ana García - id=67)
                 "(16, 67, 1, 2025, 40, 'A', 10, 'RETRASO'), " +   // Física I
@@ -227,7 +230,7 @@ public class DatabaseSeeder {
         
         // Grupos con horario Lun-Mie-Vie (grupos impares: 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29)
         int[] gruposLunMieVie = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29};
-        String[] horasLunMieVie = {"07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"};
+        String[] horasLunMieVie = {"07:00", "08:00", "09:00", "10:00", "11:00", "12:00"};
         
         int horaIndex = 0;
         for (int grupoId : gruposLunMieVie) {
@@ -262,33 +265,6 @@ public class DatabaseSeeder {
         } catch (Exception e) {
             Log.w(TAG, "Error al insertar horarios: " + e.getMessage(), e);
             throw new RuntimeException("Error al insertar horarios", e);
-        }
-        
-        // Agregar horario especial domingo 23:00-00:00 para grupos del estudiante 1 (Ana García)
-        // Estudiante 1 está inscrito en grupos: 1, 9, 13, 17, 21, 25, 29
-        seedHorarioEspecialEstudiante1(db);
-    }
-    
-    /**
-     * Agrega horario especial domingo 23:00-00:00 para los grupos del estudiante 1
-     * El estudiante 1 (Ana García) está inscrito en grupos: 1, 9, 13, 17, 21, 25, 29
-     */
-    private static void seedHorarioEspecialEstudiante1(SQLiteDatabase db) {
-        int[] gruposEstudiante1 = {1, 9, 13, 17, 21, 25, 29};
-        StringBuilder sql = new StringBuilder("INSERT INTO horarios(grupo_id, dia, hora_inicio, hora_fin) VALUES ");
-        
-        for (int i = 0; i < gruposEstudiante1.length; i++) {
-            int grupoId = gruposEstudiante1[i];
-            sql.append(String.format("(%d, 'Domingo', '23:50', '01:00')", grupoId));
-            if (i < gruposEstudiante1.length - 1) sql.append(", ");
-        }
-        
-        try {
-            db.execSQL(sql.toString());
-            Log.d(TAG, "Horario especial domingo 23:50-01:00 agregado para grupos del estudiante 1");
-        } catch (Exception e) {
-            Log.w(TAG, "Error al insertar horario especial del estudiante 1: " + e.getMessage(), e);
-            throw new RuntimeException("Error al insertar horario especial del estudiante 1", e);
         }
     }
 
@@ -566,197 +542,228 @@ public class DatabaseSeeder {
 
     /**
      * Inserta asistencias de prueba en la base de datos.
-     * Las asistencias respetan los horarios de los grupos y los días de clase
+     * Las asistencias respetan los horarios de los grupos y los días de clase.
+     * Semana pasada: 20-24 de enero 2025
+     * Al menos 5 asistencias por grupo para permitir exportación
      */
     private static void seedAsistencias(SQLiteDatabase db) {
         StringBuilder sql = new StringBuilder("INSERT INTO asistencias(alumno_id, grupo_id, fecha, hora_marcada, estado) VALUES ");
         
-        // Obtener horarios de los grupos para generar asistencias realistas
-        // Grupo 1: Lun-Mie-Vie a las 07:00-09:00
-        // Generar asistencias para lunes 20, miércoles 22, viernes 24 de enero 2025
+        // Fechas de la semana pasada (17-21 noviembre 2025)
+        String fechaLunes = "2025-11-17";
+        String fechaMartes = "2025-11-18";
+        String fechaMiercoles = "2025-11-19";
+        String fechaJueves = "2025-11-20";
+        String fechaViernes = "2025-11-21";
         
-        // Grupo 1 (Lun-Mie-Vie 07:00-09:00) - 20 estudiantes
-        // Lunes 20/01/2025
-        sql.append("(1, 1, '2025-01-20', '07:05', 'PRESENTE'), ");
-        sql.append("(2, 1, '2025-01-20', '07:08', 'PRESENTE'), ");
-        sql.append("(3, 1, '2025-01-20', '07:15', 'RETRASO'), ");
-        sql.append("(4, 1, '2025-01-20', '07:02', 'PRESENTE'), ");
-        sql.append("(5, 1, '2025-01-20', '07:20', 'RETRASO'), ");
-        sql.append("(6, 1, '2025-01-20', '07:10', 'PRESENTE'), ");
-        sql.append("(7, 1, '2025-01-20', '07:12', 'PRESENTE'), ");
-        sql.append("(8, 1, '2025-01-20', '07:25', 'RETRASO'), ");
-        sql.append("(9, 1, '2025-01-20', '07:03', 'PRESENTE'), ");
-        sql.append("(10, 1, '2025-01-20', '07:18', 'RETRASO'), ");
-        sql.append("(11, 1, '2025-01-20', '07:07', 'PRESENTE'), ");
-        sql.append("(12, 1, '2025-01-20', '07:22', 'RETRASO'), ");
-        sql.append("(13, 1, '2025-01-20', '07:04', 'PRESENTE'), ");
-        sql.append("(14, 1, '2025-01-20', '07:30', 'FALTA'), "); // Después de tolerancia
-        sql.append("(15, 1, '2025-01-20', '07:09', 'PRESENTE'), ");
-        sql.append("(16, 1, '2025-01-20', '07:11', 'PRESENTE'), ");
-        sql.append("(17, 1, '2025-01-20', '07:28', 'RETRASO'), ");
-        sql.append("(18, 1, '2025-01-20', '07:06', 'PRESENTE'), ");
-        sql.append("(19, 1, '2025-01-20', '07:14', 'PRESENTE'), ");
-        sql.append("(20, 1, '2025-01-20', '07:35', 'FALTA') "); // Después de tolerancia
+        // Horarios según grupo (índice del grupo - 1 para el array)
+        String[] horasInicio = {
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", // Grupos 1-6
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", // Grupos 7-12
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", // Grupos 13-18
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", // Grupos 19-24
+            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00"  // Grupos 25-30
+        };
         
-        sql.append(", ");
+        // Estrategias por grupo (sincronizadas exactamente con seedGrupos, línea 173-211)
+        // Mapeo manual grupo por grupo desde la definición de INSERT
+        String[] estrategias = {
+            "RETRASO", "FALTA", "RETRASO", "FALTA", "PRESENTE", "FALTA",  // Grupos 1-6
+            "FALTA", "FALTA", "PRESENTE", "RETRASO", "RETRASO", "FALTA", // Grupos 7-12
+            "PRESENTE", "RETRASO", "PRESENTE", "RETRASO", "RETRASO", "RETRASO", // Grupos 13-18
+            "FALTA", "RETRASO", "PRESENTE", "PRESENTE", "RETRASO", "PRESENTE", // Grupos 19-24
+            "PRESENTE", "PRESENTE", "RETRASO", "PRESENTE", "FALTA", "PRESENTE"   // Grupos 25-30
+        };
         
-        // Miércoles 22/01/2025 - Grupo 1
-        sql.append("(1, 1, '2025-01-22', '07:03', 'PRESENTE'), ");
-        sql.append("(2, 1, '2025-01-22', '07:15', 'RETRASO'), ");
-        sql.append("(3, 1, '2025-01-22', '07:08', 'PRESENTE'), ");
-        sql.append("(4, 1, '2025-01-22', '07:20', 'RETRASO'), ");
-        sql.append("(5, 1, '2025-01-22', '07:05', 'PRESENTE'), ");
-        sql.append("(6, 1, '2025-01-22', '07:12', 'PRESENTE'), ");
-        sql.append("(7, 1, '2025-01-22', '07:25', 'RETRASO'), ");
-        sql.append("(8, 1, '2025-01-22', '07:02', 'PRESENTE'), ");
-        sql.append("(9, 1, '2025-01-22', '07:18', 'RETRASO'), ");
-        sql.append("(10, 1, '2025-01-22', '07:07', 'PRESENTE'), ");
-        sql.append("(11, 1, '2025-01-22', '07:30', 'FALTA'), ");
-        sql.append("(12, 1, '2025-01-22', '07:04', 'PRESENTE'), ");
-        sql.append("(13, 1, '2025-01-22', '07:22', 'RETRASO'), ");
-        sql.append("(14, 1, '2025-01-22', '07:09', 'PRESENTE'), ");
-        sql.append("(15, 1, '2025-01-22', '07:11', 'PRESENTE'), ");
-        sql.append("(16, 1, '2025-01-22', '07:28', 'RETRASO'), ");
-        sql.append("(17, 1, '2025-01-22', '07:06', 'PRESENTE'), ");
-        sql.append("(18, 1, '2025-01-22', '07:14', 'PRESENTE'), ");
-        sql.append("(19, 1, '2025-01-22', '07:35', 'FALTA'), ");
-        sql.append("(20, 1, '2025-01-22', '07:10', 'PRESENTE')");
+        // Tolerancias por grupo (sincronizadas exactamente con seedGrupos, línea 173-211)
+        int[] tolerancias = {
+            10, 10, 5, 15, 10, 10,    // Grupos 1-6: RETRASO10, FALTA10, RETRASO5, FALTA15, PRESENTE10, FALTA10
+            20, 10, 10, 15, 10, 10,   // Grupos 7-12: FALTA20, FALTA10, PRESENTE10, RETRASO15, RETRASO10, FALTA10
+            10, 15, 10, 10, 10, 15,   // Grupos 13-18: PRESENTE10, RETRASO15, PRESENTE10, RETRASO10, RETRASO10, RETRASO15
+            10, 10, 5, 20, 15, 10,    // Grupos 19-24: FALTA10, RETRASO10, PRESENTE5, PRESENTE20, RETRASO15, PRESENTE10
+            10, 15, 20, 15, 10, 10    // Grupos 25-30: PRESENTE10, PRESENTE15, RETRASO20, PRESENTE15, FALTA10, PRESENTE10
+        };
         
-        sql.append(", ");
+        boolean firstEntry = true;
         
-        // Grupo 2 (Mar-Jue 08:00-10:00) - 18 estudiantes
-        // Martes 21/01/2025
-        sql.append("(21, 2, '2025-01-21', '08:05', 'PRESENTE'), ");
-        sql.append("(22, 2, '2025-01-21', '08:08', 'PRESENTE'), ");
-        sql.append("(23, 2, '2025-01-21', '08:15', 'RETRASO'), ");
-        sql.append("(24, 2, '2025-01-21', '08:02', 'PRESENTE'), ");
-        sql.append("(25, 2, '2025-01-21', '08:20', 'RETRASO'), ");
-        sql.append("(26, 2, '2025-01-21', '08:10', 'PRESENTE'), ");
-        sql.append("(27, 2, '2025-01-21', '08:12', 'PRESENTE'), ");
-        sql.append("(28, 2, '2025-01-21', '08:25', 'RETRASO'), ");
-        sql.append("(29, 2, '2025-01-21', '08:03', 'PRESENTE'), ");
-        sql.append("(30, 2, '2025-01-21', '08:18', 'RETRASO'), ");
-        sql.append("(31, 2, '2025-01-21', '08:07', 'PRESENTE'), ");
-        sql.append("(32, 2, '2025-01-21', '08:22', 'RETRASO'), ");
-        sql.append("(33, 2, '2025-01-21', '08:04', 'PRESENTE'), ");
-        sql.append("(34, 2, '2025-01-21', '08:30', 'FALTA'), ");
-        sql.append("(35, 2, '2025-01-21', '08:09', 'PRESENTE'), ");
-        sql.append("(36, 2, '2025-01-21', '08:11', 'PRESENTE'), ");
-        sql.append("(37, 2, '2025-01-21', '08:28', 'RETRASO'), ");
-        sql.append("(38, 2, '2025-01-21', '08:06', 'PRESENTE')");
-        
-        sql.append(", ");
-        
-        // Jueves 23/01/2025 - Grupo 2
-        sql.append("(21, 2, '2025-01-23', '08:03', 'PRESENTE'), ");
-        sql.append("(22, 2, '2025-01-23', '08:15', 'RETRASO'), ");
-        sql.append("(23, 2, '2025-01-23', '08:08', 'PRESENTE'), ");
-        sql.append("(24, 2, '2025-01-23', '08:20', 'RETRASO'), ");
-        sql.append("(25, 2, '2025-01-23', '08:05', 'PRESENTE'), ");
-        sql.append("(26, 2, '2025-01-23', '08:12', 'PRESENTE'), ");
-        sql.append("(27, 2, '2025-01-23', '08:25', 'RETRASO'), ");
-        sql.append("(28, 2, '2025-01-23', '08:02', 'PRESENTE'), ");
-        sql.append("(29, 2, '2025-01-23', '08:18', 'RETRASO'), ");
-        sql.append("(30, 2, '2025-01-23', '08:07', 'PRESENTE'), ");
-        sql.append("(31, 2, '2025-01-23', '08:30', 'FALTA'), ");
-        sql.append("(32, 2, '2025-01-23', '08:04', 'PRESENTE'), ");
-        sql.append("(33, 2, '2025-01-23', '08:22', 'RETRASO'), ");
-        sql.append("(34, 2, '2025-01-23', '08:09', 'PRESENTE'), ");
-        sql.append("(35, 2, '2025-01-23', '08:11', 'PRESENTE'), ");
-        sql.append("(36, 2, '2025-01-23', '08:28', 'RETRASO'), ");
-        sql.append("(37, 2, '2025-01-23', '08:06', 'PRESENTE'), ");
-        sql.append("(38, 2, '2025-01-23', '08:14', 'PRESENTE')");
-        
-        sql.append(", ");
-        
-        // Grupo 3 (Lun-Mie-Vie 09:00-11:00) - 16 estudiantes
-        // Lunes 20/01/2025
-        sql.append("(1, 3, '2025-01-20', '09:05', 'PRESENTE'), ");
-        sql.append("(2, 3, '2025-01-20', '09:08', 'PRESENTE'), ");
-        sql.append("(3, 3, '2025-01-20', '09:15', 'RETRASO'), ");
-        sql.append("(4, 3, '2025-01-20', '09:02', 'PRESENTE'), ");
-        sql.append("(5, 3, '2025-01-20', '09:20', 'RETRASO'), ");
-        sql.append("(6, 3, '2025-01-20', '09:10', 'PRESENTE'), ");
-        sql.append("(7, 3, '2025-01-20', '09:12', 'PRESENTE'), ");
-        sql.append("(8, 3, '2025-01-20', '09:25', 'RETRASO'), ");
-        sql.append("(9, 3, '2025-01-20', '09:03', 'PRESENTE'), ");
-        sql.append("(10, 3, '2025-01-20', '09:18', 'RETRASO'), ");
-        sql.append("(11, 3, '2025-01-20', '09:07', 'PRESENTE'), ");
-        sql.append("(12, 3, '2025-01-20', '09:22', 'RETRASO'), ");
-        sql.append("(13, 3, '2025-01-20', '09:04', 'PRESENTE'), ");
-        sql.append("(14, 3, '2025-01-20', '09:30', 'FALTA'), ");
-        sql.append("(15, 3, '2025-01-20', '09:09', 'PRESENTE'), ");
-        sql.append("(16, 3, '2025-01-20', '09:11', 'PRESENTE')");
-        
-        sql.append(", ");
-        
-        // Miércoles 22/01/2025 - Grupo 3
-        sql.append("(1, 3, '2025-01-22', '09:03', 'PRESENTE'), ");
-        sql.append("(2, 3, '2025-01-22', '09:15', 'RETRASO'), ");
-        sql.append("(3, 3, '2025-01-22', '09:08', 'PRESENTE'), ");
-        sql.append("(4, 3, '2025-01-22', '09:20', 'RETRASO'), ");
-        sql.append("(5, 3, '2025-01-22', '09:05', 'PRESENTE'), ");
-        sql.append("(6, 3, '2025-01-22', '09:12', 'PRESENTE'), ");
-        sql.append("(7, 3, '2025-01-22', '09:25', 'RETRASO'), ");
-        sql.append("(8, 3, '2025-01-22', '09:02', 'PRESENTE'), ");
-        sql.append("(9, 3, '2025-01-22', '09:18', 'RETRASO'), ");
-        sql.append("(10, 3, '2025-01-22', '09:07', 'PRESENTE'), ");
-        sql.append("(11, 3, '2025-01-22', '09:30', 'FALTA'), ");
-        sql.append("(12, 3, '2025-01-22', '09:04', 'PRESENTE'), ");
-        sql.append("(13, 3, '2025-01-22', '09:22', 'RETRASO'), ");
-        sql.append("(14, 3, '2025-01-22', '09:09', 'PRESENTE'), ");
-        sql.append("(15, 3, '2025-01-22', '09:11', 'PRESENTE'), ");
-        sql.append("(16, 3, '2025-01-22', '09:28', 'RETRASO')");
-        
-        sql.append(", ");
-        
-        // Grupo 4 (Mar-Jue 10:00-12:00) - 17 estudiantes
-        // Martes 21/01/2025
-        sql.append("(17, 4, '2025-01-21', '10:05', 'PRESENTE'), ");
-        sql.append("(18, 4, '2025-01-21', '10:08', 'PRESENTE'), ");
-        sql.append("(19, 4, '2025-01-21', '10:15', 'RETRASO'), ");
-        sql.append("(20, 4, '2025-01-21', '10:02', 'PRESENTE'), ");
-        sql.append("(21, 4, '2025-01-21', '10:20', 'RETRASO'), ");
-        sql.append("(22, 4, '2025-01-21', '10:10', 'PRESENTE'), ");
-        sql.append("(23, 4, '2025-01-21', '10:12', 'PRESENTE'), ");
-        sql.append("(24, 4, '2025-01-21', '10:25', 'RETRASO'), ");
-        sql.append("(25, 4, '2025-01-21', '10:03', 'PRESENTE'), ");
-        sql.append("(26, 4, '2025-01-21', '10:18', 'RETRASO'), ");
-        sql.append("(27, 4, '2025-01-21', '10:07', 'PRESENTE'), ");
-        sql.append("(28, 4, '2025-01-21', '10:22', 'RETRASO'), ");
-        sql.append("(29, 4, '2025-01-21', '10:04', 'PRESENTE'), ");
-        sql.append("(30, 4, '2025-01-21', '10:30', 'FALTA'), ");
-        sql.append("(31, 4, '2025-01-21', '10:09', 'PRESENTE'), ");
-        sql.append("(32, 4, '2025-01-21', '10:11', 'PRESENTE'), ");
-        sql.append("(33, 4, '2025-01-21', '10:28', 'RETRASO')");
-        
-        sql.append(", ");
-        
-        // Jueves 23/01/2025 - Grupo 4
-        sql.append("(17, 4, '2025-01-23', '10:03', 'PRESENTE'), ");
-        sql.append("(18, 4, '2025-01-23', '10:15', 'RETRASO'), ");
-        sql.append("(19, 4, '2025-01-23', '10:08', 'PRESENTE'), ");
-        sql.append("(20, 4, '2025-01-23', '10:20', 'RETRASO'), ");
-        sql.append("(21, 4, '2025-01-23', '10:05', 'PRESENTE'), ");
-        sql.append("(22, 4, '2025-01-23', '10:12', 'PRESENTE'), ");
-        sql.append("(23, 4, '2025-01-23', '10:25', 'RETRASO'), ");
-        sql.append("(24, 4, '2025-01-23', '10:02', 'PRESENTE'), ");
-        sql.append("(25, 4, '2025-01-23', '10:18', 'RETRASO'), ");
-        sql.append("(26, 4, '2025-01-23', '10:07', 'PRESENTE'), ");
-        sql.append("(27, 4, '2025-01-23', '10:30', 'FALTA'), ");
-        sql.append("(28, 4, '2025-01-23', '10:04', 'PRESENTE'), ");
-        sql.append("(29, 4, '2025-01-23', '10:22', 'RETRASO'), ");
-        sql.append("(30, 4, '2025-01-23', '10:09', 'PRESENTE'), ");
-        sql.append("(31, 4, '2025-01-23', '10:11', 'PRESENTE'), ");
-        sql.append("(32, 4, '2025-01-23', '10:28', 'RETRASO'), ");
-        sql.append("(33, 4, '2025-01-23', '10:06', 'PRESENTE')");
+        // Generar asistencias para todos los 30 grupos
+        for (int grupoId = 1; grupoId <= 30; grupoId++) {
+            String horaInicio = horasInicio[grupoId - 1];
+            String estrategia = estrategias[grupoId - 1];
+            int tolerancia = tolerancias[grupoId - 1];
+            
+            // Determinar días según paridad del grupo
+            String[] fechas;
+            if (grupoId % 2 == 1) {
+                // Grupos impares: Lun-Mie-Vie
+                fechas = new String[]{fechaLunes, fechaMiercoles, fechaViernes};
+            } else {
+                // Grupos pares: Mar-Jue
+                fechas = new String[]{fechaMartes, fechaJueves};
+            }
+            
+            // Obtener estudiantes inscritos en este grupo desde boletas
+            List<Integer> estudiantes = obtenerEstudiantesInscritosEnGrupo(db, grupoId);
+            if (estudiantes.isEmpty()) {
+                Log.w(TAG, "Grupo " + grupoId + " no tiene estudiantes inscritos, omitiendo asistencias");
+                continue;
+            }
+            
+            // Generar al menos 5 asistencias por grupo (distribuidas en los días de clase)
+            int asistenciasGeneradas = 0;
+            int minimoAsistencias = Math.min(5, estudiantes.size()); // Al menos 5 o todos los estudiantes
+            
+            for (String fecha : fechas) {
+                if (asistenciasGeneradas >= minimoAsistencias) break;
+                
+                // Seleccionar algunos estudiantes para este día (mínimo 2-3 por día)
+                int estudiantesPorDia = Math.min(3, estudiantes.size() - asistenciasGeneradas);
+                if (estudiantesPorDia < 1) estudiantesPorDia = 1;
+                
+                for (int i = 0; i < estudiantesPorDia && asistenciasGeneradas < minimoAsistencias; i++) {
+                    int estudianteIndex = asistenciasGeneradas % estudiantes.size();
+                    int estudianteId = estudiantes.get(estudianteIndex);
+                    
+                    // Generar hora de marcado realista dentro del horario [horaInicio, horaInicio+2h]
+                    String horaMarcada = generarHoraMarcada(horaInicio, estrategia, tolerancia);
+                    String estado = calcularEstadoSegunEstrategia(horaInicio, horaMarcada, estrategia, tolerancia);
+                    
+                    if (!firstEntry) sql.append(", ");
+                    sql.append(String.format("(%d, %d, '%s', '%s', '%s')", 
+                        estudianteId, grupoId, fecha, horaMarcada, estado));
+                    firstEntry = false;
+                    asistenciasGeneradas++;
+                }
+            }
+            
+            // Si aún no tenemos 5 asistencias, agregar más en el primer día
+            if (asistenciasGeneradas < 5 && fechas.length > 0) {
+                for (int i = asistenciasGeneradas; i < Math.min(5, estudiantes.size()); i++) {
+                    int estudianteIndex = i % estudiantes.size();
+                    int estudianteId = estudiantes.get(estudianteIndex);
+                    String horaMarcada = generarHoraMarcada(horaInicio, estrategia, tolerancia);
+                    String estado = calcularEstadoSegunEstrategia(horaInicio, horaMarcada, estrategia, tolerancia);
+                    
+                    if (!firstEntry) sql.append(", ");
+                    sql.append(String.format("(%d, %d, '%s', '%s', '%s')", 
+                        estudianteId, grupoId, fechas[0], horaMarcada, estado));
+                    firstEntry = false;
+                }
+            }
+        }
 
         try {
             db.execSQL(sql.toString());
-            Log.d(TAG, "Asistencias de prueba insertadas respetando horarios y días de clase");
+            Log.d(TAG, "Asistencias de prueba insertadas - al menos 5 por grupo de la semana pasada (20-24 enero 2025)");
         } catch (Exception e) {
             Log.w(TAG, "Error al insertar asistencias: " + e.getMessage(), e);
             throw new RuntimeException("Error al insertar asistencias", e);
+        }
+    }
+    
+    /**
+     * Obtiene los IDs de estudiantes inscritos en un grupo
+     */
+    private static List<Integer> obtenerEstudiantesInscritosEnGrupo(SQLiteDatabase db, int grupoId) {
+        List<Integer> estudiantes = new ArrayList<>();
+        String sql = "SELECT DISTINCT alumno_id FROM boletas WHERE grupo_id = ?";
+        
+        try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(grupoId)})) {
+            while (cursor.moveToNext()) {
+                estudiantes.add(cursor.getInt(0));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al obtener estudiantes del grupo " + grupoId, e);
+        }
+        
+        return estudiantes;
+    }
+    
+    /**
+     * Genera una hora de marcado realista basada en la hora de inicio y la estrategia
+     */
+    private static String generarHoraMarcada(String horaInicio, String estrategia, int tolerancia) {
+        String[] partes = horaInicio.split(":");
+        int horas = Integer.parseInt(partes[0]);
+        int minutos = Integer.parseInt(partes[1]);
+        
+        // Agregar minutos aleatorios según estrategia para generar diferentes estados
+        int minutosAgregados = 0;
+        switch (estrategia) {
+            case "PRESENTE":
+                // Mayoría de llegadas puntuales (0-10 min)
+                minutosAgregados = (int)(Math.random() * 10);
+                break;
+            case "RETRASO":
+                // Mix de puntuales y retrasos (0-30 min)
+                minutosAgregados = (int)(Math.random() * 30);
+                break;
+            case "FALTA":
+                // Mix incluyendo faltas (0-45 min, algunos dentro de tolerancia, otros no)
+                minutosAgregados = (int)(Math.random() * 45);
+                break;
+        }
+        
+        minutos += minutosAgregados;
+        if (minutos >= 60) {
+            horas += minutos / 60;
+            minutos = minutos % 60;
+        }
+        if (horas >= 24) horas = 23; // No exceder 23:59
+        
+        return String.format("%02d:%02d", horas, minutos);
+    }
+    
+    /**
+     * Calcula el estado de asistencia según la estrategia configurada
+     */
+    private static String calcularEstadoSegunEstrategia(String horaInicio, String horaMarcada, String estrategia, int tolerancia) {
+        String[] partesInicio = horaInicio.split(":");
+        String[] partesMarcada = horaMarcada.split(":");
+        
+        int minutosInicio = Integer.parseInt(partesInicio[0]) * 60 + Integer.parseInt(partesInicio[1]);
+        int minutosMarcada = Integer.parseInt(partesMarcada[0]) * 60 + Integer.parseInt(partesMarcada[1]);
+        
+        // Hora fin es 2 horas después de inicio
+        int minutosFin = minutosInicio + 120;
+        
+        // Verificar que esté dentro del horario de clase
+        if (minutosMarcada < minutosInicio || minutosMarcada > minutosFin) {
+            // No debería pasar si generamos horas correctamente, pero por seguridad
+            return "FALTA";
+        }
+        
+        int diferencia = minutosMarcada - minutosInicio;
+        
+        switch (estrategia) {
+            case "PRESENTE":
+                // Estrategia flexible: siempre PRESENTE si está dentro del horario
+                return "PRESENTE";
+                
+            case "RETRASO":
+                // Estrategia estándar
+                if (diferencia < 0) {
+                    return "PRESENTE"; // Llegó antes
+                } else if (diferencia <= tolerancia) {
+                    return "RETRASO"; // 0-tolerancia min
+                } else {
+                    return "RETRASO"; // >tolerancia pero dentro del horario
+                }
+                
+            case "FALTA":
+                // Estrategia estricta
+                if (diferencia < 0) {
+                    return "PRESENTE"; // Llegó antes
+                } else if (diferencia <= 10) {
+                    return "PRESENTE"; // 0-10 min
+                } else if (diferencia <= tolerancia) {
+                    return "RETRASO"; // 11-tolerancia min
+                } else {
+                    return "FALTA"; // >tolerancia
+                }
+                
+            default:
+                return "PRESENTE";
         }
     }
 }

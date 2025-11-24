@@ -4,7 +4,9 @@ import android.content.Context;
 import android.util.Log;
 
 import com.arquitectura.asistente.datos.Asistencia;
+import com.arquitectura.asistente.datos.adapter.AsistenciaExportDTO;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
+import com.arquitectura.asistente.datos.adapter.ExportResult;
 
 import java.util.List;
 
@@ -41,11 +43,13 @@ public class ExportarAsistenciaCU {
                 return ExportResult.error("ID de grupo inválido");
             }
 
-            // Obtener las asistencias directamente de la clase Asistencia
-            List<Asistencia> asistencias = Asistencia.obtenerPorGrupo(grupoId);
+            // Obtener las asistencias con información completa para exportación
+            // Usa JOINs para obtener nombres de estudiantes, materias, grupos, etc.
+            List<AsistenciaExportDTO> asistenciasDTO = 
+                Asistencia.obtenerPorGrupoParaExportacion(grupoId);
             
             // Validar que haya datos para exportar
-            if (asistencias.isEmpty()) {
+            if (asistenciasDTO.isEmpty()) {
                 Log.w(TAG, "No hay asistencias para exportar del grupo " + grupoId);
                 return ExportResult.error("No hay asistencias para exportar");
             }
@@ -55,9 +59,9 @@ public class ExportarAsistenciaCU {
 
             // Delegar la exportación al adapter (Adapter Pattern)
             // El UseCase NO sabe si es Excel, PDF u otro formato
-            byte[] datos = adapter.exportar(asistencias, nombreArchivo);
+            byte[] datos = adapter.exportar(asistenciasDTO, nombreArchivo);
 
-            Log.d(TAG, "Exportacion completada exitosamente: " + asistencias.size() + " registros");
+            Log.d(TAG, "Exportacion completada exitosamente: " + asistenciasDTO.size() + " registros");
 
             // Retornar resultado exitoso
             return ExportResult.success(
@@ -66,7 +70,7 @@ public class ExportarAsistenciaCU {
                 adapter.obtenerExtension(),
                 adapter.obtenerTipoMime(),
                 adapter.obtenerNombreFormato(),
-                asistencias.size()
+                asistenciasDTO.size()
             );
 
         } catch (Exception e) {
@@ -79,8 +83,9 @@ public class ExportarAsistenciaCU {
      * Verifica si hay asistencias para exportar
      */
     public boolean tieneAsistenciasParaExportar(Integer grupoId) {
-        List<Asistencia> asistencias = Asistencia.obtenerPorGrupo(grupoId);
-        return !asistencias.isEmpty();
+        List<AsistenciaExportDTO> asistenciasDTO = 
+            Asistencia.obtenerPorGrupoParaExportacion(grupoId);
+        return !asistenciasDTO.isEmpty();
     }
 }
 
