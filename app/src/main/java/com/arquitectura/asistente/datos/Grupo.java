@@ -264,6 +264,46 @@ public class Grupo {
     }
 
     /**
+     * Obtiene los grupos asignados a un docente (consulta personalizada)
+     * Sigue el mismo patrón que obtenerPorEstudiante
+     * IMPORTANTE: Solo devuelve grupos donde el docente está asignado
+     */
+    public static List<Grupo> obtenerPorDocente(Integer docenteId) {
+        verificarInicializacion();
+        
+        List<Grupo> grupos = new ArrayList<>();
+        // Consulta con INNER JOIN para obtener grupos asignados al docente
+        String sql = "SELECT g.id, g.grupo, g.materia_id, m.nombre as materia_nombre, " +
+                     "g.docente_id, u.nombres || ' ' || u.apellidos as docente_nombre, " +
+                     "g.semestre, g.gestion, g.capacidad, g.tolerancia_minutos, g.tipo_estrategia " +
+                     "FROM grupos g " +
+                     "INNER JOIN materias m ON g.materia_id = m.id " +
+                     "INNER JOIN usuarios u ON g.docente_id = u.id " +
+                     "WHERE g.docente_id = ? " +
+                     "ORDER BY m.nombre, g.grupo";
+        
+        SQLiteDatabase db = baseDAO.getReadableDatabase();
+        
+        try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(docenteId)})) {
+            int count = 0;
+            while (cursor.moveToNext()) {
+                Grupo grupo = mapCursorToGrupo(cursor);
+                grupos.add(grupo);
+                count++;
+                Log.d(TAG, "Grupo encontrado para docente " + docenteId + ": ID=" + grupo.getId() + 
+                      ", Materia=" + grupo.getMateriaNombre() + ", Grupo=" + grupo.getGrupo());
+            }
+            Log.d(TAG, "Total de grupos encontrados para docente " + docenteId + ": " + count);
+        } catch (Exception e) {
+            Log.e(TAG, "Error al obtener grupos por docente: " + docenteId, e);
+        } finally {
+            db.close();
+        }
+        
+        return grupos;
+    }
+
+    /**
      * Mapea un Cursor a un objeto Grupo
      */
     private static Grupo mapCursorToGrupo(Cursor cursor) {

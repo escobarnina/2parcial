@@ -1,10 +1,15 @@
 package com.arquitectura.asistente.presentacion;
 
-import android.app.Dialog;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.Window;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,20 +17,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
 import com.arquitectura.asistente.datos.Horario;
 import com.arquitectura.asistente.datos.adapter.AsistenciaExcelAdapter;
 import com.arquitectura.asistente.datos.adapter.AsistenciaPDFAdapter;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
-import com.arquitectura.asistente.datos.database.DatabaseBaseDAO;
 import com.arquitectura.asistente.datos.adapter.ExportResult;
 import com.arquitectura.asistente.negocio.ExportarAsistenciaCU;
 import com.arquitectura.asistente.presentacion.widget.GrupoAdapter;
 
-import java.util.ArrayList;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * DocenteActivity - Capa de Presentación
@@ -66,7 +73,8 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
     }
 
     private void cargarGruposAsignados() {
-        List<Grupo> grupos = obtenerGruposPorDocente(DOCENTE_ID);
+        // Usar el método estático de Grupo siguiendo el patrón de EstudianteActivity
+        List<Grupo> grupos = Grupo.obtenerPorDocente(DOCENTE_ID);
         
         if (grupos.isEmpty()) {
             Toast.makeText(this, getString(R.string.docente_sin_materias), Toast.LENGTH_LONG).show();
@@ -83,48 +91,32 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
     }
 
     private void mostrarDialogoExportar(Grupo grupo) {
-        Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_exportar);
-        dialog.setCancelable(true);
-        
-        // Configurar ventana del diálogo con fondo blanco sólido
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(android.R.color.transparent);
-            window.setDimAmount(0.6f);
-            window.setLayout(
-                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
-                android.view.WindowManager.LayoutParams.WRAP_CONTENT
-            );
-        }
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_exportar, null);
+        bottomSheetDialog.setContentView(view);
         
         // Obtener vistas
-        TextView tvMateriaInfo = dialog.findViewById(R.id.tvMateriaInfo);
-        MaterialButton btnExportarExcel = dialog.findViewById(R.id.btnExportarExcel);
-        MaterialButton btnExportarPDF = dialog.findViewById(R.id.btnExportarPDF);
-        MaterialButton btnCancelar = dialog.findViewById(R.id.btnCancelar);
+        TextView tvMateriaInfo = view.findViewById(R.id.tvMateriaInfo);
+        View optionExcel = view.findViewById(R.id.optionExcel);
+        View optionPDF = view.findViewById(R.id.optionPDF);
         
         // Configurar información
         tvMateriaInfo.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
         
-        // Botón Excel
-        btnExportarExcel.setOnClickListener(v -> {
-            dialog.dismiss();
+        // Opción Excel
+        optionExcel.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
             exportarAsistencias(grupo, new AsistenciaExcelAdapter());
         });
         
-        // Botón PDF
-        btnExportarPDF.setOnClickListener(v -> {
-            dialog.dismiss();
+        // Opción PDF
+        optionPDF.setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
             exportarAsistencias(grupo, new AsistenciaPDFAdapter());
         });
         
-        // Botón cancelar
-        btnCancelar.setOnClickListener(v -> dialog.dismiss());
-        
-        // Mostrar diálogo
-        dialog.show();
+        // Mostrar bottom sheet
+        bottomSheetDialog.show();
     }
 
     private void exportarAsistencias(Grupo grupo, DataExportAdapter exportAdapter) {
@@ -133,61 +125,90 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
             ExportResult resultado = exportarCU.exportar(grupo.getId(), exportAdapter);
             
             if (resultado.isSuccess()) {
-                String mensaje = getString(R.string.exportacion_exito) + "\n" +
-                               "Formato: " + resultado.getFormato() + "\n" +
-                               "Registros: " + resultado.getCantidadRegistros();
-                Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show();
+                // Guardar archivo en Downloads usando MediaStore
+                boolean guardado = guardarArchivoEnDownloads(
+                    resultado.getDatos(),
+                    resultado.getNombreArchivo(),
+                    resultado.getExtension(),
+                    resultado.getTipoMime()
+                );
+                
+                if (guardado) {
+                    String mensaje = getString(R.string.exportacion_exito) + "\n" +
+                                   "Formato: " + resultado.getFormato() + "\n" +
+                                   "Registros: " + resultado.getCantidadRegistros() + "\n" +
+                                   "Archivo guardado en Descargas";
+                    Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, 
+                        "Error al guardar el archivo",
+                        Toast.LENGTH_LONG).show();
+                }
             } else {
                 Toast.makeText(this, 
                     getString(R.string.exportacion_error) + ": " + resultado.getMensajeError(),
                     Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
+            Log.e("DocenteActivity", "Error al exportar: " + e.getMessage(), e);
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
-
+    
     /**
-     * Obtiene los grupos asignados a un docente
-     * Consulta personalizada que filtra grupos por docente_id
+     * Guarda un archivo en la carpeta Downloads usando MediaStore (compatible con Android 10+)
+     * No requiere permisos especiales para Android 10+ (API 29+)
+     * 
+     * @param datos Contenido del archivo en bytes
+     * @param nombreBase Nombre base del archivo (sin extensión)
+     * @param extension Extensión del archivo (ej: "xlsx", "pdf")
+     * @param tipoMime Tipo MIME del archivo (ej: "application/vnd.ms-excel", "application/pdf")
+     * @return true si se guardó correctamente, false en caso contrario
      */
-    private List<Grupo> obtenerGruposPorDocente(Integer docenteId) {
-        List<Grupo> grupos = new ArrayList<>();
-        DatabaseBaseDAO baseDAO = DatabaseBaseDAO.getInstance(this);
-        SQLiteDatabase db = baseDAO.getReadableDatabase();
-        
-        String sql = "SELECT g.id, g.grupo, g.materia_id, m.nombre as materia_nombre, " +
-                     "g.docente_id, u.nombres || ' ' || u.apellidos as docente_nombre, " +
-                     "g.semestre, g.gestion, g.capacidad, g.tolerancia_minutos, g.tipo_estrategia " +
-                     "FROM grupos g " +
-                     "INNER JOIN materias m ON g.materia_id = m.id " +
-                     "INNER JOIN usuarios u ON g.docente_id = u.id " +
-                     "WHERE g.docente_id = ? " +
-                     "ORDER BY m.nombre, g.grupo";
-        
-        try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(docenteId)})) {
-            while (cursor.moveToNext()) {
-                Grupo grupo = new Grupo();
-                grupo.setId(cursor.getInt(0));
-                grupo.setGrupo(cursor.getString(1));
-                grupo.setMateriaId(cursor.getInt(2));
-                grupo.setMateriaNombre(cursor.getString(3));
-                grupo.setDocenteId(cursor.getInt(4));
-                grupo.setDocenteNombre(cursor.getString(5));
-                grupo.setSemestre(cursor.getInt(6));
-                grupo.setGestion(cursor.getInt(7));
-                grupo.setCapacidad(cursor.getInt(8));
-                grupo.setToleranciaMinutos(cursor.getInt(9));
-                grupo.setTipoEstrategia(cursor.getString(10));
-                grupos.add(grupo);
+    private boolean guardarArchivoEnDownloads(byte[] datos, String nombreBase, String extension, String tipoMime) {
+        try {
+            ContentResolver resolver = getContentResolver();
+            
+            // Generar nombre único con timestamp
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+            String timestamp = sdf.format(new Date());
+            String nombreArchivo = nombreBase + "_" + timestamp + "." + extension;
+            
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Downloads.DISPLAY_NAME, nombreArchivo);
+            contentValues.put(MediaStore.Downloads.MIME_TYPE, tipoMime);
+            
+            // Para Android 10+ (API 29+), usar MediaStore directamente
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                contentValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                
+                Uri uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues);
+                
+                if (uri != null) {
+                    try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                        if (outputStream != null) {
+                            outputStream.write(datos);
+                            outputStream.flush();
+                            Log.d("DocenteActivity", "Archivo guardado: " + nombreArchivo);
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                // Para versiones anteriores a Android 10 (no debería ejecutarse con minSdk 33)
+                // Pero por compatibilidad:
+                Toast.makeText(this, 
+                    "Esta versión de Android no es compatible",
+                    Toast.LENGTH_SHORT).show();
+                return false;
             }
+            
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            db.close();
+            Log.e("DocenteActivity", "Error al guardar archivo: " + e.getMessage(), e);
+            return false;
         }
         
-        return grupos;
+        return false;
     }
 }
 

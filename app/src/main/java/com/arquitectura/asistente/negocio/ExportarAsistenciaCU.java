@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.arquitectura.asistente.datos.Asistencia;
+import com.arquitectura.asistente.datos.Grupo;
 import com.arquitectura.asistente.datos.adapter.AsistenciaExportDTO;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
 import com.arquitectura.asistente.datos.adapter.ExportResult;
@@ -17,13 +18,50 @@ import java.util.List;
  * - NO conoce los detalles de implementación específicos (Excel, PDF)
  * - Solo conoce la interface Target (DataExportAdapter)
  * - Delega la exportación al adapter sin saber cuál es
+ * 
+ * RELACIONES EXPLÍCITAS (Capa de Negocio):
+ * - ExportarAsistenciaCU -> Asistencia (instancia, capa de datos)
+ * - ExportarAsistenciaCU -> Grupo (instancia, capa de datos)
+ * 
+ * NOTA: Las relaciones con DatabaseBaseDAO y DatabaseHelper son responsabilidad
+ * de la capa de datos (Asistencia, Grupo), no de la capa de negocio.
+ * La capa de negocio solo trabaja con las clases de datos, que internamente
+ * gestionan su acceso a la base de datos.
  */
 public class ExportarAsistenciaCU {
     private static final String TAG = "ExportarAsistenciaCU";
+    
+    // Instancias explícitas de las clases de datos para hacer visibles las relaciones
+    private Asistencia asistenciaData;
+    private Grupo grupoData;
 
     public ExportarAsistenciaCU(Context context) {
-        // Inicializar acceso a datos de Asistencia
+        // Inicializar acceso a datos de todas las entidades necesarias
         Asistencia.inicializar(context);
+        Grupo.inicializar(context);
+        
+        // Crear instancias explícitas de las clases de datos
+        // Estas instancias hacen visible la relación en diagramas de clases
+        // Aunque las clases usen métodos estáticos internamente, tener instancias
+        // documenta claramente la dependencia de ExportarAsistenciaCU con estas clases
+        this.asistenciaData = new Asistencia();
+        this.grupoData = new Grupo();
+        
+        Log.d(TAG, "ExportarAsistenciaCU inicializado con instancias explícitas de clases de datos");
+    }
+    
+    /**
+     * Obtiene la instancia de Asistencia (para hacer explícita la relación)
+     */
+    public Asistencia getAsistenciaData() {
+        return asistenciaData;
+    }
+    
+    /**
+     * Obtiene la instancia de Grupo (para hacer explícita la relación)
+     */
+    public Grupo getGrupoData() {
+        return grupoData;
     }
 
     /**
@@ -45,6 +83,7 @@ public class ExportarAsistenciaCU {
 
             // Obtener las asistencias con información completa para exportación
             // Usa JOINs para obtener nombres de estudiantes, materias, grupos, etc.
+            // Acceso a datos a través de la clase de datos (aunque use métodos estáticos)
             List<AsistenciaExportDTO> asistenciasDTO = 
                 Asistencia.obtenerPorGrupoParaExportacion(grupoId);
             
@@ -81,6 +120,7 @@ public class ExportarAsistenciaCU {
 
     /**
      * Verifica si hay asistencias para exportar
+     * Acceso a datos a través de la clase de datos (aunque use métodos estáticos)
      */
     public boolean tieneAsistenciasParaExportar(Integer grupoId) {
         List<AsistenciaExportDTO> asistenciasDTO = 
