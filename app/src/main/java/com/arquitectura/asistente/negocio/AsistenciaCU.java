@@ -10,6 +10,9 @@ import com.arquitectura.asistente.negocio.strategy.EstrategiaFalta;
 import android.content.Context;
 import android.util.Log;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -58,8 +61,21 @@ public class AsistenciaCU {
                 return false;
             }
 
-            // Obtener la hora de inicio y fin del primer horario (simplificado)
-            Horario horario = horarios.get(0);
+            // Obtener el día de la semana de la fecha que se está marcando
+            String diaSemana = obtenerDiaSemana(fecha);
+            Log.d(TAG, "Fecha marcada: " + fecha + " - Día de la semana: " + diaSemana);
+
+            // Buscar el horario que corresponde al día de la semana
+            Horario horario = buscarHorarioPorDia(horarios, diaSemana);
+            if (horario == null) {
+                Log.w(TAG, "No hay horario configurado para el día " + diaSemana + " en el grupo " + grupoId);
+                // Si no hay horario para ese día, usar el primer horario disponible como fallback
+                horario = horarios.get(0);
+                Log.d(TAG, "Usando horario de fallback: " + horario.getDia() + " " + horario.getHoraInicio() + "-" + horario.getHoraFin());
+            } else {
+                Log.d(TAG, "Horario encontrado para " + diaSemana + ": " + horario.getHoraInicio() + "-" + horario.getHoraFin());
+            }
+
             String horaInicio = horario.getHoraInicio();
             String horaFin = horario.getHoraFin();
 
@@ -126,6 +142,56 @@ public class AsistenciaCU {
      */
     public String getUltimoEstadoCalculado() {
         return ultimoEstadoCalculado;
+    }
+
+    /**
+     * Obtiene el día de la semana en español desde una fecha en formato YYYY-MM-DD
+     * @param fecha Fecha en formato YYYY-MM-DD
+     * @return Día de la semana en español: "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"
+     */
+    private String obtenerDiaSemana(String fecha) {
+        try {
+            LocalDate localDate = LocalDate.parse(fecha, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            DayOfWeek dayOfWeek = localDate.getDayOfWeek();
+            
+            // Convertir DayOfWeek a español
+            switch (dayOfWeek) {
+                case MONDAY:
+                    return "Lunes";
+                case TUESDAY:
+                    return "Martes";
+                case WEDNESDAY:
+                    return "Miércoles";
+                case THURSDAY:
+                    return "Jueves";
+                case FRIDAY:
+                    return "Viernes";
+                case SATURDAY:
+                    return "Sábado";
+                case SUNDAY:
+                    return "Domingo";
+                default:
+                    return "Lunes"; // Fallback
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al obtener día de la semana de la fecha: " + fecha, e);
+            return "Lunes"; // Fallback
+        }
+    }
+
+    /**
+     * Busca un horario en la lista que corresponda al día de la semana especificado
+     * @param horarios Lista de horarios del grupo
+     * @param diaSemana Día de la semana en español: "Lunes", "Martes", etc.
+     * @return Horario que corresponde al día, o null si no se encuentra
+     */
+    private Horario buscarHorarioPorDia(List<Horario> horarios, String diaSemana) {
+        for (Horario horario : horarios) {
+            if (horario.getDia().equalsIgnoreCase(diaSemana)) {
+                return horario;
+            }
+        }
+        return null;
     }
 }
 
