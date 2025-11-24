@@ -17,7 +17,7 @@ import java.util.List;
  * Capa de Datos - Representa la entidad Asistencia
  * El estado se calcula usando Strategy Pattern
  * 
- * Contiene métodos estáticos para acceso a datos que muestran
+ * Contiene métodos de instancia para acceso a datos que muestran
  * cómo desde la clase de datos se conecta directamente con la base de datos
  * 
  * RELACIONES:
@@ -27,8 +27,10 @@ import java.util.List;
 public class Asistencia {
     private static final String TAG = "Asistencia";
     private static final String TABLE_NAME = "asistencias";
-    private static DatabaseBaseDAO baseDAO; // Relación explícita con DatabaseBaseDAO
-    private static Context context;
+    
+    // Relación explícita con la capa de acceso a datos sin usar métodos estáticos
+    private DatabaseBaseDAO baseDAO;
+    private Context appContext;
 
     private Integer id;
     private Integer alumnoId;
@@ -58,12 +60,24 @@ public class Asistencia {
     }
 
     /**
-     * Inicializa el acceso a la base de datos
-     * Debe ser llamado antes de usar los métodos de acceso a datos
+     * Constructor que habilita el acceso a datos para esta instancia
+     * Permite que los métodos de acceso a BD sean de instancia (no estáticos)
      */
-    public static void inicializar(Context ctx) {
-        context = ctx.getApplicationContext();
-        baseDAO = DatabaseBaseDAO.getInstance(context);
+    public Asistencia(Context context) {
+        this();
+        configurarAccesoDatos(context);
+    }
+
+    /**
+     * Permite habilitar el acceso a datos en cualquier momento sin recurrir a métodos estáticos.
+     * Si ya fue configurado, simplemente reutiliza la instancia existente.
+     */
+    public void configurarAccesoDatos(Context context) {
+        this.appContext = context != null ? context.getApplicationContext() : null;
+        if (this.appContext == null) {
+            throw new IllegalArgumentException("Se requiere un Context válido para configurar el acceso a datos de Asistencia");
+        }
+        this.baseDAO = DatabaseBaseDAO.getInstance(this.appContext);
     }
 
     // Getters y Setters
@@ -132,7 +146,7 @@ public class Asistencia {
      * Usa el método genérico insert de DatabaseBaseDAO
      * Muestra cómo desde la clase de datos se conecta directamente con la base de datos
      */
-    public static Asistencia guardar(Asistencia asistencia) {
+    public Asistencia guardar(Asistencia asistencia) {
         verificarInicializacion();
         
         ContentValues values = new ContentValues();
@@ -155,7 +169,7 @@ public class Asistencia {
     /**
      * Obtiene todas las asistencias de un grupo (consulta personalizada)
      */
-    public static List<Asistencia> obtenerPorGrupo(Integer grupoId) {
+    public List<Asistencia> obtenerPorGrupo(Integer grupoId) {
         verificarInicializacion();
         
         List<Asistencia> asistencias = new ArrayList<>();
@@ -179,7 +193,7 @@ public class Asistencia {
      * Verifica si un alumno está inscrito en un grupo (consulta personalizada)
      * Valida que exista una inscripción activa en la tabla boletas
      */
-    public static boolean estaInscrito(Integer alumnoId, Integer grupoId) {
+    public boolean estaInscrito(Integer alumnoId, Integer grupoId) {
         verificarInicializacion();
         
         String sql = "SELECT COUNT(*) FROM boletas WHERE alumno_id = ? AND grupo_id = ?";
@@ -207,7 +221,7 @@ public class Asistencia {
     /**
      * Obtiene todas las asistencias de un alumno (consulta personalizada)
      */
-    public static List<Asistencia> obtenerPorAlumno(Integer alumnoId) {
+    public List<Asistencia> obtenerPorAlumno(Integer alumnoId) {
         verificarInicializacion();
         
         List<Asistencia> asistencias = new ArrayList<>();
@@ -234,7 +248,7 @@ public class Asistencia {
      * @param fecha Fecha en formato YYYY-MM-DD
      * @return La asistencia existente o null si no existe
      */
-    public static Asistencia obtenerAsistenciaExistente(Integer alumnoId, Integer grupoId, String fecha) {
+    public Asistencia obtenerAsistenciaExistente(Integer alumnoId, Integer grupoId, String fecha) {
         verificarInicializacion();
         
         String sql = "SELECT * FROM asistencias WHERE alumno_id = ? AND grupo_id = ? AND fecha = ? LIMIT 1";
@@ -264,10 +278,14 @@ public class Asistencia {
      * Hace JOINs con las tablas relacionadas para obtener nombres, materias, grupos, etc.
      * Retorna un DTO específico para exportación sin modificar la entidad Asistencia
      * 
+     * IMPORTANTE: Este método CREA las instancias de AsistenciaExportDTO.
+     * Cada registro del Cursor se mapea a un nuevo DTO usando mapCursorToAsistenciaExportDTO().
+     * Los adapters (Excel, PDF) reciben estas instancias ya creadas y solo las utilizan.
+     * 
      * @param grupoId ID del grupo
-     * @return Lista de AsistenciaExportDTO con información completa
+     * @return Lista de AsistenciaExportDTO con información completa (instancias creadas aquí)
      */
-    public static List<AsistenciaExportDTO> obtenerPorGrupoParaExportacion(Integer grupoId) {
+    public List<AsistenciaExportDTO> obtenerPorGrupoParaExportacion(Integer grupoId) {
         verificarInicializacion();
         
         List<AsistenciaExportDTO> asistenciasDTO = new ArrayList<>();
@@ -310,9 +328,16 @@ public class Asistencia {
 
     /**
      * Mapea un Cursor a un objeto AsistenciaExportDTO con información completa
+     * 
+     * IMPORTANTE: Este método CREA una nueva instancia de AsistenciaExportDTO
+     * y la llena con los datos del Cursor (que proviene de JOINs SQL).
+     * Esta es la única ubicación donde se crean instancias de AsistenciaExportDTO.
+     * 
+     * @param cursor Cursor con los datos de la consulta SQL (incluye JOINs)
+     * @return Nueva instancia de AsistenciaExportDTO con todos los campos poblados
      */
-    private static AsistenciaExportDTO mapCursorToAsistenciaExportDTO(Cursor cursor) {
-        AsistenciaExportDTO dto = new AsistenciaExportDTO();
+    private AsistenciaExportDTO mapCursorToAsistenciaExportDTO(Cursor cursor) {
+        AsistenciaExportDTO dto = new AsistenciaExportDTO(); // CREACIÓN DE INSTANCIA
         
         // Campos básicos
         dto.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
@@ -367,7 +392,7 @@ public class Asistencia {
     /**
      * Mapea un Cursor a un objeto Asistencia
      */
-    private static Asistencia mapCursorToAsistencia(Cursor cursor) {
+    private Asistencia mapCursorToAsistencia(Cursor cursor) {
         Asistencia asistencia = new Asistencia();
         asistencia.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
         asistencia.setAlumnoId(cursor.getInt(cursor.getColumnIndexOrThrow("alumno_id")));
@@ -381,9 +406,9 @@ public class Asistencia {
     /**
      * Verifica que la clase haya sido inicializada antes de usar los métodos de acceso a datos
      */
-    private static void verificarInicializacion() {
-        if (baseDAO == null || context == null) {
-            throw new IllegalStateException("Asistencia debe ser inicializada primero con Asistencia.inicializar(Context)");
+    private void verificarInicializacion() {
+        if (baseDAO == null) {
+            throw new IllegalStateException("Asistencia requiere que se configure el acceso a datos mediante configurarAccesoDatos(Context)");
         }
     }
 }

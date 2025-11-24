@@ -14,6 +14,11 @@ import java.util.logging.Logger;
  * Adapter concreto para exportar asistencias a formato PDF
  * Capa de Datos - Adapter Pattern - Adapter 2
  * Adapta iText (Adaptee) a DataExportAdapter (Target)
+ * 
+ * NOTA: Este adapter NO crea instancias de AsistenciaExportDTO.
+ * Las instancias se crean mediante la instancia de Asistencia
+ * (método obtenerPorGrupoParaExportacion()) y se pasan como parámetro.
+ * Este adapter solo las utiliza para generar el archivo PDF.
  */
 public class AsistenciaPDFAdapter implements DataExportAdapter {
     private static final Logger logger = Logger.getLogger(AsistenciaPDFAdapter.class.getName());

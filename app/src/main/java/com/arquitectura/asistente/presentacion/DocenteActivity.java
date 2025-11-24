@@ -24,7 +24,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
-import com.arquitectura.asistente.datos.Horario;
 import com.arquitectura.asistente.datos.adapter.AsistenciaExcelAdapter;
 import com.arquitectura.asistente.datos.adapter.AsistenciaPDFAdapter;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
@@ -59,8 +58,6 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
         
         // Inicializar casos de uso y acceso a datos
         this.exportarCU = new ExportarAsistenciaCU(this);
-        Grupo.inicializar(this);
-        Horario.inicializar(this);
         
         inicializarVistas();
         cargarGruposAsignados();
@@ -73,12 +70,12 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
         recyclerViewGrupos.setLayoutManager(new LinearLayoutManager(this));
         grupoAdapter = new GrupoAdapter(this);
         grupoAdapter.setContext(this);
+        grupoAdapter.setHorarioProvider(grupoId -> exportarCU.obtenerHorariosDeGrupo(grupoId));
         recyclerViewGrupos.setAdapter(grupoAdapter);
     }
 
     private void cargarGruposAsignados() {
-        // Usar el método estático de Grupo siguiendo el patrón de EstudianteActivity
-        List<Grupo> grupos = Grupo.obtenerPorDocente(DOCENTE_ID);
+        List<Grupo> grupos = exportarCU.obtenerGruposPorDocente(DOCENTE_ID);
         
         if (grupos.isEmpty()) {
             Toast.makeText(this, getString(R.string.docente_sin_materias), Toast.LENGTH_LONG).show();

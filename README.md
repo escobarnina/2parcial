@@ -49,6 +49,7 @@ com.arquitectura.asistente/
   - Botón para abrir el explorador de archivos en la carpeta de Descargas
 - 🎯 **Patrón Strategy**: Cálculo flexible de estados de asistencia (PRESENTE, RETRASO, FALTA)
 - 🔌 **Patrón Adapter**: Exportación a múltiples formatos sin modificar código cliente
+- 🧱 **Capa de Negocio Centralizada**: Las actividades (Docente/Estudiante) solo interactúan con los casos de uso (`AsistenciaCU`, `ExportarAsistenciaCU`) para obtener grupos, horarios y realizar exportaciones; la capa de presentación ya no toca directamente la base de datos.
 - 📅 **Validación de Horarios**: Verificación estricta de días y horas para marcar asistencia
   - Las estrategias retornan `null` cuando se intenta marcar fuera del horario de clase
   - No se registra asistencia fuera del horario establecido

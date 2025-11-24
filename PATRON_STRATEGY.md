@@ -193,7 +193,7 @@ public class AsistenciaCU {
         // ... validaciones ...
         
         // Obtener tipo de estrategia del grupo desde BD
-        String tipoEstrategia = Grupo.obtenerTipoEstrategiaGrupo(grupoId);
+        String tipoEstrategia = grupoData.obtenerTipoEstrategiaGrupo(grupoId);
         
         // Configurar estrategia automáticamente desde BD si no está configurada
         if (estrategia == null) {
@@ -543,7 +543,7 @@ if (tipo == "PRESENTE") {
 contexto.marcarAsistencia(...);
 
 // Context obtiene configuración desde BD
-String tipoEstrategia = Grupo.obtenerTipoEstrategiaGrupo(grupoId);
+String tipoEstrategia = grupoData.obtenerTipoEstrategiaGrupo(grupoId);
 // ✅ Ventaja: Agregar nueva estrategia solo requiere modificar Context
 ```
 

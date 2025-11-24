@@ -42,18 +42,12 @@ public class AsistenciaCU {
     private Horario horarioData;
 
     public AsistenciaCU(Context context) {
-        // Inicializar acceso a datos de todas las entidades necesarias
-        Asistencia.inicializar(context);
-        Grupo.inicializar(context);
-        Horario.inicializar(context);
-        
         // Crear instancias explícitas de las clases de datos
         // Estas instancias hacen visible la relación en diagramas de clases
-        // Aunque las clases usen métodos estáticos internamente, tener instancias
-        // documenta claramente la dependencia de AsistenciaCU con estas clases
-        this.asistenciaData = new Asistencia();
-        this.grupoData = new Grupo();
-        this.horarioData = new Horario();
+        // y documentan claramente la dependencia de AsistenciaCU con estas clases
+        this.asistenciaData = new Asistencia(context);
+        this.grupoData = new Grupo(context);
+        this.horarioData = new Horario(context);
         
         Log.d(TAG, "AsistenciaCU inicializado con instancias explícitas de clases de datos");
     }
@@ -98,7 +92,7 @@ public class AsistenciaCU {
             this.ultimoEstadoCalculado = null;
             
             // Validar que el alumno esté inscrito en el grupo
-            boolean inscrito = Asistencia.estaInscrito(alumnoId, grupoId);
+            boolean inscrito = asistenciaData.estaInscrito(alumnoId, grupoId);
             Log.d(TAG, "Validando inscripción - Alumno: " + alumnoId + ", Grupo: " + grupoId + ", Inscrito: " + inscrito);
             
             if (!inscrito) {
@@ -109,7 +103,7 @@ public class AsistenciaCU {
             Log.d(TAG, "Validación de inscripción exitosa - Alumno " + alumnoId + " está inscrito en grupo " + grupoId);
 
             // Obtener horarios del grupo para validar
-            List<Horario> horarios = Horario.obtenerHorariosGrupo(grupoId);
+            List<Horario> horarios = horarioData.obtenerHorariosGrupo(grupoId);
             if (horarios.isEmpty()) {
                 Log.w(TAG, "El grupo " + grupoId + " no tiene horarios configurados");
                 return false;
@@ -133,7 +127,7 @@ public class AsistenciaCU {
             String horaFin = horario.getHoraFin();
 
             // Obtener tipo de estrategia del grupo
-            String tipoEstrategia = Grupo.obtenerTipoEstrategiaGrupo(grupoId);
+            String tipoEstrategia = grupoData.obtenerTipoEstrategiaGrupo(grupoId);
             Log.d(TAG, "Tipo de estrategia del grupo " + grupoId + ": " + tipoEstrategia);
 
             // Configurar estrategia automáticamente desde BD según el grupo actual
@@ -170,7 +164,7 @@ public class AsistenciaCU {
             asistencia.setHoraMarcada(horaMarcado);
             asistencia.setEstado(estado);
 
-            Asistencia.guardar(asistencia);
+            asistenciaData.guardar(asistencia);
             Log.d(TAG, "Asistencia marcada exitosamente");
             
             // Guardar el estado en la instancia para poder retornarlo
@@ -187,14 +181,28 @@ public class AsistenciaCU {
      * Obtiene todas las asistencias de un grupo
      */
     public List<Asistencia> obtenerAsistenciasPorGrupo(Integer grupoId) {
-        return Asistencia.obtenerPorGrupo(grupoId);
+        return asistenciaData.obtenerPorGrupo(grupoId);
     }
 
     /**
      * Obtiene todas las asistencias de un alumno
      */
     public List<Asistencia> obtenerAsistenciasPorAlumno(Integer alumnoId) {
-        return Asistencia.obtenerPorAlumno(alumnoId);
+        return asistenciaData.obtenerPorAlumno(alumnoId);
+    }
+
+    /**
+     * Obtiene los grupos en los que está inscrito un estudiante
+     */
+    public List<Grupo> obtenerGruposPorEstudiante(Integer estudianteId) {
+        return grupoData.obtenerPorEstudiante(estudianteId);
+    }
+
+    /**
+     * Obtiene los horarios configurados para un grupo
+     */
+    public List<Horario> obtenerHorariosDeGrupo(Integer grupoId) {
+        return horarioData.obtenerHorariosGrupo(grupoId);
     }
 
     /**
@@ -212,7 +220,7 @@ public class AsistenciaCU {
      * @return Horario del día o null si no existe
      */
     public Horario obtenerHorarioPorFecha(Integer grupoId, String fecha) {
-        List<Horario> horarios = Horario.obtenerHorariosGrupo(grupoId);
+        List<Horario> horarios = horarioData.obtenerHorariosGrupo(grupoId);
         if (horarios.isEmpty()) {
             return null;
         }
@@ -229,7 +237,7 @@ public class AsistenciaCU {
      * @return La asistencia existente o null si no existe
      */
     public Asistencia obtenerAsistenciaExistente(Integer alumnoId, Integer grupoId, String fecha) {
-        return Asistencia.obtenerAsistenciaExistente(alumnoId, grupoId, fecha);
+        return asistenciaData.obtenerAsistenciaExistente(alumnoId, grupoId, fecha);
     }
 
     /**

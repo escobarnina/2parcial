@@ -24,9 +24,14 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
     private List<Grupo> grupos;
     private OnGrupoClickListener listener;
     private Context context;
+    private HorarioProvider horarioProvider;
 
     public interface OnGrupoClickListener {
         void onGrupoClick(Grupo grupo);
+    }
+
+    public interface HorarioProvider {
+        List<Horario> obtenerHorarios(Integer grupoId);
     }
 
     public GrupoAdapter(OnGrupoClickListener listener) {
@@ -36,6 +41,10 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
 
     public void setContext(Context context) {
         this.context = context;
+    }
+
+    public void setHorarioProvider(HorarioProvider horarioProvider) {
+        this.horarioProvider = horarioProvider;
     }
 
     @NonNull
@@ -95,9 +104,9 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
             txtSemestreGestion.setText("Semestre " + grupo.getSemestre() + " - " + grupo.getGestion());
             
             // Obtener y mostrar horarios
-            if (context != null && grupo.getId() != null) {
+            if (grupo.getId() != null && horarioProvider != null) {
                 try {
-                    List<Horario> horarios = Horario.obtenerHorariosGrupo(grupo.getId());
+                    List<Horario> horarios = horarioProvider.obtenerHorarios(grupo.getId());
                     if (horarios != null && !horarios.isEmpty()) {
                         // Formatear horarios y días
                         StringBuilder horariosStr = new StringBuilder();

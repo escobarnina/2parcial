@@ -15,7 +15,7 @@ import java.util.List;
  * Capa de Datos - Representa la entidad Grupo
  * Incluye campos para Strategy Pattern (tolerancia_minutos, tipo_estrategia)
  * 
- * Contiene métodos estáticos para acceso a datos que muestran
+ * Contiene métodos de instancia para acceso a datos que muestran
  * cómo desde la clase de datos se conecta directamente con la base de datos
  * 
  * RELACIONES:
@@ -25,8 +25,10 @@ import java.util.List;
 public class Grupo {
     private static final String TAG = "Grupo";
     private static final String TABLE_NAME = "grupos";
-    private static DatabaseBaseDAO baseDAO; // Relación explícita con DatabaseBaseDAO
-    private static Context context;
+    
+    // Relación explícita con la capa de acceso a datos sin usar métodos estáticos
+    private DatabaseBaseDAO baseDAO;
+    private Context appContext;
     private Integer id;
     private String grupo; // Paralelo (A, B, etc.)
     private Integer materiaId;
@@ -170,18 +172,28 @@ public class Grupo {
     }
 
     /**
-     * Inicializa el acceso a la base de datos
-     * Debe ser llamado antes de usar los métodos de acceso a datos
+     * Constructor que habilita el acceso a datos para esta instancia
      */
-    public static void inicializar(Context ctx) {
-        context = ctx.getApplicationContext();
-        baseDAO = DatabaseBaseDAO.getInstance(context);
+    public Grupo(Context context) {
+        this();
+        configurarAccesoDatos(context);
+    }
+
+    /**
+     * Permite configurar o reconfigurar el acceso a datos
+     */
+    public void configurarAccesoDatos(Context context) {
+        this.appContext = context != null ? context.getApplicationContext() : null;
+        if (this.appContext == null) {
+            throw new IllegalArgumentException("Se requiere un Context válido para configurar el acceso a datos de Grupo");
+        }
+        this.baseDAO = DatabaseBaseDAO.getInstance(this.appContext);
     }
 
     /**
      * Obtiene la tolerancia de un grupo (consulta personalizada para Strategy Pattern)
      */
-    public static Integer obtenerToleranciaGrupo(Integer grupoId) {
+    public Integer obtenerToleranciaGrupo(Integer grupoId) {
         verificarInicializacion();
         
         String sql = "SELECT tolerancia_minutos FROM grupos WHERE id = ?";
@@ -203,7 +215,7 @@ public class Grupo {
     /**
      * Obtiene el tipo de estrategia de un grupo (consulta personalizada para Strategy Pattern)
      */
-    public static String obtenerTipoEstrategiaGrupo(Integer grupoId) {
+    public String obtenerTipoEstrategiaGrupo(Integer grupoId) {
         verificarInicializacion();
         
         String sql = "SELECT tipo_estrategia FROM grupos WHERE id = ?";
@@ -224,10 +236,10 @@ public class Grupo {
 
     /**
      * Obtiene los grupos en los que está inscrito un estudiante (consulta personalizada)
-     * Sigue el mismo patrón que Asistencia.obtenerPorAlumno
+     * Sigue el mismo patrón que la instancia de Asistencia (obtenerPorAlumno)
      * IMPORTANTE: Solo devuelve grupos donde el estudiante tiene una inscripción activa en boletas
      */
-    public static List<Grupo> obtenerPorEstudiante(Integer estudianteId) {
+    public List<Grupo> obtenerPorEstudiante(Integer estudianteId) {
         verificarInicializacion();
         
         List<Grupo> grupos = new ArrayList<>();
@@ -268,7 +280,7 @@ public class Grupo {
      * Sigue el mismo patrón que obtenerPorEstudiante
      * IMPORTANTE: Solo devuelve grupos donde el docente está asignado
      */
-    public static List<Grupo> obtenerPorDocente(Integer docenteId) {
+    public List<Grupo> obtenerPorDocente(Integer docenteId) {
         verificarInicializacion();
         
         List<Grupo> grupos = new ArrayList<>();
@@ -306,7 +318,7 @@ public class Grupo {
     /**
      * Mapea un Cursor a un objeto Grupo
      */
-    private static Grupo mapCursorToGrupo(Cursor cursor) {
+    private Grupo mapCursorToGrupo(Cursor cursor) {
         Grupo grupo = new Grupo();
         grupo.setId(cursor.getInt(0));
         grupo.setGrupo(cursor.getString(1));
@@ -325,9 +337,9 @@ public class Grupo {
     /**
      * Verifica que la clase haya sido inicializada antes de usar los métodos de acceso a datos
      */
-    private static void verificarInicializacion() {
-        if (baseDAO == null || context == null) {
-            throw new IllegalStateException("Grupo debe ser inicializada primero con Grupo.inicializar(Context)");
+    private void verificarInicializacion() {
+        if (baseDAO == null) {
+            throw new IllegalStateException("Grupo requiere configurarAccesoDatos(Context) antes de usarse");
         }
     }
 }

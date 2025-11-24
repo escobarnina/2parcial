@@ -243,53 +243,55 @@ class ExampleApplication is
 #### Implementación Real:
 ```java
 public class ExportarAsistenciaCU {
-    private static final String TAG = "ExportarAsistenciaCU";
-    
-    /**
-     * Exporta las asistencias de un grupo usando el adapter especificado
-     * Patrón Adapter: El UseCase solo conoce la interface, no la implementación
-     */
+    private final Asistencia asistenciaData;
+    private final Grupo grupoData;
+    private final Horario horarioData;
+    private List<AsistenciaExportDTO> asistenciasParaExportar;
+    private ExportResult ultimoResultado;
+
+    public ExportarAsistenciaCU(Context context) {
+        this.asistenciaData = new Asistencia(context);
+        this.grupoData = new Grupo(context);
+        this.horarioData = new Horario(context);
+    }
+
     public ExportResult exportar(Integer grupoId, DataExportAdapter adapter) {
-        Log.d(TAG, "Iniciando exportacion de asistencias para grupo ID: " + grupoId);
-        
         try {
-            // Validar ID del grupo
             if (grupoId == null || grupoId <= 0) {
-                return ExportResult.error("ID de grupo inválido");
+                ultimoResultado = ExportResult.error("ID de grupo inválido");
+                return ultimoResultado;
             }
-            
-            // Obtener las asistencias con información completa para exportación
-            List<AsistenciaExportDTO> asistenciasDTO = 
-                Asistencia.obtenerPorGrupoParaExportacion(grupoId);
-            
-            // Validar que haya datos para exportar
-            if (asistenciasDTO.isEmpty()) {
-                return ExportResult.error("No hay asistencias para exportar");
+
+            asistenciasParaExportar = asistenciaData.obtenerPorGrupoParaExportacion(grupoId);
+            if (asistenciasParaExportar.isEmpty()) {
+                ultimoResultado = ExportResult.error("No hay asistencias para exportar");
+                return ultimoResultado;
             }
-            
-            // Generar nombre del archivo
+
             String nombreArchivo = "asistencias_grupo_" + grupoId;
-            
-            // Delegar la exportación al adapter (Adapter Pattern)
-            // El cliente NO sabe si es Excel, PDF u otro formato
-            byte[] datos = adapter.exportar(asistenciasDTO, nombreArchivo);
-            
-            Log.d(TAG, "Exportacion completada exitosamente: " + asistenciasDTO.size() + " registros");
-            
-            // Retornar resultado exitoso
-            return ExportResult.success(
+            byte[] datos = adapter.exportar(asistenciasParaExportar, nombreArchivo);
+
+            ultimoResultado = ExportResult.success(
                 datos,
                 nombreArchivo,
                 adapter.obtenerExtension(),
                 adapter.obtenerTipoMime(),
                 adapter.obtenerNombreFormato(),
-                asistenciasDTO.size()
+                asistenciasParaExportar.size()
             );
-            
+            return ultimoResultado;
         } catch (Exception e) {
-            Log.e(TAG, "Error al exportar asistencias: " + e.getMessage(), e);
-            return ExportResult.error("Error al exportar: " + e.getMessage());
+            ultimoResultado = ExportResult.error("Error al exportar: " + e.getMessage());
+            return ultimoResultado;
         }
+    }
+
+    public List<Grupo> obtenerGruposPorDocente(Integer docenteId) {
+        return grupoData.obtenerPorDocente(docenteId);
+    }
+
+    public List<Horario> obtenerHorariosDeGrupo(Integer grupoId) {
+        return horarioData.obtenerHorariosGrupo(grupoId);
     }
 }
 ```

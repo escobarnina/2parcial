@@ -58,10 +58,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         // IMPORTANTE: Asistencia se inicializa dentro de AsistenciaCU
         // pero también necesitamos inicializarlo aquí para validaciones
         this.asistenciaCU = new AsistenciaCU(this);
-        Grupo.inicializar(this);
-        Horario.inicializar(this);
-        Asistencia.inicializar(this);
-        
+
         inicializarVistas();
         cargarGruposInscritos();
         iniciarActualizacionHora();
@@ -81,6 +78,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         recyclerViewGrupos.setLayoutManager(new LinearLayoutManager(this));
         grupoAdapter = new GrupoAdapter(this);
         grupoAdapter.setContext(this);
+        grupoAdapter.setHorarioProvider(grupoId -> asistenciaCU.obtenerHorariosDeGrupo(grupoId));
         recyclerViewGrupos.setAdapter(grupoAdapter);
         
         // Inicializar handler para actualizar hora
@@ -88,8 +86,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
     }
 
     private void cargarGruposInscritos() {
-        // Usar el método estático de Grupo siguiendo el patrón de Asistencia.java
-        List<Grupo> grupos = Grupo.obtenerPorEstudiante(ESTUDIANTE_ID);
+        List<Grupo> grupos = asistenciaCU.obtenerGruposPorEstudiante(ESTUDIANTE_ID);
         
         if (grupos.isEmpty()) {
             Toast.makeText(this, getString(R.string.estudiante_sin_materias), Toast.LENGTH_LONG).show();
@@ -138,7 +135,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             }
             
             // Verificar que el estudiante esté inscrito en este grupo
-            boolean inscrito = Asistencia.estaInscrito(ESTUDIANTE_ID, grupo.getId());
+            boolean inscrito = asistenciaCU.getAsistenciaData().estaInscrito(ESTUDIANTE_ID, grupo.getId());
             if (!inscrito) {
                 Toast.makeText(this, "Error: No estás inscrito en este grupo", Toast.LENGTH_LONG).show();
                 return;

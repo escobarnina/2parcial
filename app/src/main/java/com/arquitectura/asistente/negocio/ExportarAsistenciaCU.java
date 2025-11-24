@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.arquitectura.asistente.datos.Asistencia;
 import com.arquitectura.asistente.datos.Grupo;
+import com.arquitectura.asistente.datos.Horario;
 import com.arquitectura.asistente.datos.adapter.AsistenciaExportDTO;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
 import com.arquitectura.asistente.datos.adapter.ExportResult;
@@ -18,6 +19,15 @@ import java.util.List;
  * - NO conoce los detalles de implementación específicos (Excel, PDF)
  * - Solo conoce la interface Target (DataExportAdapter)
  * - Delega la exportación al adapter sin saber cuál es
+ * 
+ * FLUJO DE CREACIÓN DE AsistenciaExportDTO:
+ * 1. Este UseCase llama a su instancia de Asistencia (asistenciaData)
+ *    para obtener los datos completos mediante obtenerPorGrupoParaExportacion(grupoId)
+ * 2. Asistencia (capa de datos) crea las instancias de AsistenciaExportDTO
+ *    usando mapCursorToAsistenciaExportDTO() con datos de JOINs SQL
+ * 3. Retorna List<AsistenciaExportDTO> con información completa
+ * 4. Este UseCase pasa la lista al adapter (Excel o PDF)
+ * 5. El adapter utiliza los DTOs para generar el archivo (NO los crea)
  * 
  * RELACIONES EXPLÍCITAS (Capa de Negocio):
  * - ExportarAsistenciaCU -> Asistencia (instancia, capa de datos)
@@ -34,18 +44,19 @@ public class ExportarAsistenciaCU {
     // Instancias explícitas de las clases de datos para hacer visibles las relaciones
     private Asistencia asistenciaData;
     private Grupo grupoData;
+    private Horario horarioData;
+    
+    // Relaciones adicionales requeridas por el diagrama
+    private List<AsistenciaExportDTO> asistenciasParaExportar;
+    private ExportResult ultimoResultado;
 
     public ExportarAsistenciaCU(Context context) {
-        // Inicializar acceso a datos de todas las entidades necesarias
-        Asistencia.inicializar(context);
-        Grupo.inicializar(context);
-        
         // Crear instancias explícitas de las clases de datos
         // Estas instancias hacen visible la relación en diagramas de clases
-        // Aunque las clases usen métodos estáticos internamente, tener instancias
-        // documenta claramente la dependencia de ExportarAsistenciaCU con estas clases
-        this.asistenciaData = new Asistencia();
-        this.grupoData = new Grupo();
+        // y documentan claramente la dependencia de ExportarAsistenciaCU con estas clases
+        this.asistenciaData = new Asistencia(context);
+        this.grupoData = new Grupo(context);
+        this.horarioData = new Horario(context);
         
         Log.d(TAG, "ExportarAsistenciaCU inicializado con instancias explícitas de clases de datos");
     }
@@ -78,19 +89,23 @@ public class ExportarAsistenciaCU {
         try {
             // Validar ID del grupo
             if (grupoId == null || grupoId <= 0) {
-                return ExportResult.error("ID de grupo inválido");
+                ultimoResultado = ExportResult.error("ID de grupo inválido");
+                return ultimoResultado;
             }
 
             // Obtener las asistencias con información completa para exportación
-            // Usa JOINs para obtener nombres de estudiantes, materias, grupos, etc.
+            // IMPORTANTE: Las instancias de AsistenciaExportDTO se CREAN aquí en la capa de datos
+            // mediante asistenciaData.obtenerPorGrupoParaExportacion() que usa JOINs SQL
+            // y mapCursorToAsistenciaExportDTO() para mapear los resultados
             // Acceso a datos a través de la clase de datos (aunque use métodos estáticos)
-            List<AsistenciaExportDTO> asistenciasDTO = 
-                Asistencia.obtenerPorGrupoParaExportacion(grupoId);
+            asistenciasParaExportar = 
+                asistenciaData.obtenerPorGrupoParaExportacion(grupoId);
             
             // Validar que haya datos para exportar
-            if (asistenciasDTO.isEmpty()) {
+            if (asistenciasParaExportar.isEmpty()) {
                 Log.w(TAG, "No hay asistencias para exportar del grupo " + grupoId);
-                return ExportResult.error("No hay asistencias para exportar");
+                ultimoResultado = ExportResult.error("No hay asistencias para exportar");
+                return ultimoResultado;
             }
 
             // Generar nombre del archivo
@@ -98,23 +113,25 @@ public class ExportarAsistenciaCU {
 
             // Delegar la exportación al adapter (Adapter Pattern)
             // El UseCase NO sabe si es Excel, PDF u otro formato
-            byte[] datos = adapter.exportar(asistenciasDTO, nombreArchivo);
+            byte[] datos = adapter.exportar(asistenciasParaExportar, nombreArchivo);
 
-            Log.d(TAG, "Exportacion completada exitosamente: " + asistenciasDTO.size() + " registros");
+            Log.d(TAG, "Exportacion completada exitosamente: " + asistenciasParaExportar.size() + " registros");
 
             // Retornar resultado exitoso
-            return ExportResult.success(
+            ultimoResultado = ExportResult.success(
                 datos,
                 nombreArchivo,
                 adapter.obtenerExtension(),
                 adapter.obtenerTipoMime(),
                 adapter.obtenerNombreFormato(),
-                asistenciasDTO.size()
+                asistenciasParaExportar.size()
             );
+            return ultimoResultado;
 
         } catch (Exception e) {
             Log.e(TAG, "Error al exportar asistencias: " + e.getMessage(), e);
-            return ExportResult.error("Error al exportar: " + e.getMessage());
+            ultimoResultado = ExportResult.error("Error al exportar: " + e.getMessage());
+            return ultimoResultado;
         }
     }
 
@@ -123,9 +140,25 @@ public class ExportarAsistenciaCU {
      * Acceso a datos a través de la clase de datos (aunque use métodos estáticos)
      */
     public boolean tieneAsistenciasParaExportar(Integer grupoId) {
-        List<AsistenciaExportDTO> asistenciasDTO = 
-            Asistencia.obtenerPorGrupoParaExportacion(grupoId);
-        return !asistenciasDTO.isEmpty();
+        asistenciasParaExportar = 
+            asistenciaData.obtenerPorGrupoParaExportacion(grupoId);
+        return !asistenciasParaExportar.isEmpty();
+    }
+
+    public List<Grupo> obtenerGruposPorDocente(Integer docenteId) {
+        return grupoData.obtenerPorDocente(docenteId);
+    }
+
+    public List<Horario> obtenerHorariosDeGrupo(Integer grupoId) {
+        return horarioData.obtenerHorariosGrupo(grupoId);
+    }
+
+    public List<AsistenciaExportDTO> getAsistenciasParaExportar() {
+        return asistenciasParaExportar;
+    }
+
+    public ExportResult getUltimoResultado() {
+        return ultimoResultado;
     }
 }
 

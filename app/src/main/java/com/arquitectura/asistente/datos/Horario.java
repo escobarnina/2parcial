@@ -14,7 +14,7 @@ import java.util.List;
  * Modelo de datos para Horario
  * Capa de Datos - Representa la entidad Horario
  * 
- * Contiene métodos estáticos para acceso a datos que muestran
+ * Contiene métodos de instancia para acceso a datos que muestran
  * cómo desde la clase de datos se conecta directamente con la base de datos
  * 
  * RELACIONES:
@@ -24,8 +24,10 @@ import java.util.List;
 public class Horario {
     private static final String TAG = "Horario";
     private static final String TABLE_NAME = "horarios";
-    private static DatabaseBaseDAO baseDAO; // Relación explícita con DatabaseBaseDAO
-    private static Context context;
+    
+    // Relación explícita con la capa de acceso a datos sin usar métodos estáticos
+    private DatabaseBaseDAO baseDAO;
+    private Context appContext;
     private Integer id;
     private Integer grupoId;
     private String dia; // "Lunes", "Martes", etc.
@@ -103,18 +105,28 @@ public class Horario {
     }
 
     /**
-     * Inicializa el acceso a la base de datos
-     * Debe ser llamado antes de usar los métodos de acceso a datos
+     * Constructor que habilita el acceso a datos para esta instancia
      */
-    public static void inicializar(Context ctx) {
-        context = ctx.getApplicationContext();
-        baseDAO = DatabaseBaseDAO.getInstance(context);
+    public Horario(Context context) {
+        this();
+        configurarAccesoDatos(context);
+    }
+
+    /**
+     * Permite configurar o reconfigurar el acceso a datos
+     */
+    public void configurarAccesoDatos(Context context) {
+        this.appContext = context != null ? context.getApplicationContext() : null;
+        if (this.appContext == null) {
+            throw new IllegalArgumentException("Se requiere un Context válido para configurar el acceso a datos de Horario");
+        }
+        this.baseDAO = DatabaseBaseDAO.getInstance(this.appContext);
     }
 
     /**
      * Obtiene los horarios de un grupo (consulta personalizada)
      */
-    public static List<Horario> obtenerHorariosGrupo(Integer grupoId) {
+    public List<Horario> obtenerHorariosGrupo(Integer grupoId) {
         verificarInicializacion();
         
         List<Horario> horarios = new ArrayList<>();
@@ -143,9 +155,9 @@ public class Horario {
     /**
      * Verifica que la clase haya sido inicializada antes de usar los métodos de acceso a datos
      */
-    private static void verificarInicializacion() {
-        if (baseDAO == null || context == null) {
-            throw new IllegalStateException("Horario debe ser inicializada primero con Horario.inicializar(Context)");
+    private void verificarInicializacion() {
+        if (baseDAO == null) {
+            throw new IllegalStateException("Horario requiere configurarAccesoDatos(Context) antes de usarse");
         }
     }
 }
