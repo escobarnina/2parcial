@@ -21,10 +21,10 @@ import java.util.List;
  * Este caso de uso actúa como contexto que usa diferentes estrategias
  * para calcular el estado de asistencia (PRESENTE, RETRASO, FALTA)
  * 
- * RELACIONES (Capa de Negocio):
- * - AsistenciaCU -> Asistencia (capa de datos)
- * - AsistenciaCU -> Grupo (capa de datos)
- * - AsistenciaCU -> Horario (capa de datos)
+ * RELACIONES EXPLÍCITAS (Capa de Negocio):
+ * - AsistenciaCU -> Asistencia (instancia, capa de datos)
+ * - AsistenciaCU -> Grupo (instancia, capa de datos)
+ * - AsistenciaCU -> Horario (instancia, capa de datos)
  * 
  * NOTA: Las relaciones con DatabaseBaseDAO y DatabaseHelper son responsabilidad
  * de la capa de datos (Asistencia, Grupo, Horario), no de la capa de negocio.
@@ -35,14 +35,48 @@ public class AsistenciaCU {
     private static final String TAG = "AsistenciaCU";
     private IEstrategiaAsistencia estrategia;
     private String ultimoEstadoCalculado; // Para poder obtener el estado después de marcar
+    
+    // Instancias explícitas de las clases de datos para hacer visibles las relaciones
+    private Asistencia asistenciaData;
+    private Grupo grupoData;
+    private Horario horarioData;
 
     public AsistenciaCU(Context context) {
         // Inicializar acceso a datos de todas las entidades necesarias
-        // Las clases de datos (Asistencia, Grupo, Horario) son las que internamente
-        // se relacionan con DatabaseBaseDAO y DatabaseHelper (capa de datos)
         Asistencia.inicializar(context);
         Grupo.inicializar(context);
         Horario.inicializar(context);
+        
+        // Crear instancias explícitas de las clases de datos
+        // Estas instancias hacen visible la relación en diagramas de clases
+        // Aunque las clases usen métodos estáticos internamente, tener instancias
+        // documenta claramente la dependencia de AsistenciaCU con estas clases
+        this.asistenciaData = new Asistencia();
+        this.grupoData = new Grupo();
+        this.horarioData = new Horario();
+        
+        Log.d(TAG, "AsistenciaCU inicializado con instancias explícitas de clases de datos");
+    }
+    
+    /**
+     * Obtiene la instancia de Asistencia (para hacer explícita la relación)
+     */
+    public Asistencia getAsistenciaData() {
+        return asistenciaData;
+    }
+    
+    /**
+     * Obtiene la instancia de Grupo (para hacer explícita la relación)
+     */
+    public Grupo getGrupoData() {
+        return grupoData;
+    }
+    
+    /**
+     * Obtiene la instancia de Horario (para hacer explícita la relación)
+     */
+    public Horario getHorarioData() {
+        return horarioData;
     }
 
     /**
