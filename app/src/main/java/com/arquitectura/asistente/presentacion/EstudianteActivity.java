@@ -129,13 +129,16 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
             String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String hora = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
             
-            // Obtener horario del grupo para mostrar en el diálogo
-            List<Horario> horarios = Horario.obtenerHorariosGrupo(grupo.getId());
-            String horarioClase = "No disponible";
-            if (!horarios.isEmpty()) {
-                Horario horario = horarios.get(0);
-                horarioClase = horario.getHoraInicio() + " - " + horario.getHoraFin();
+            // Verificar si hay horario para el día actual
+            Horario horario = asistenciaCU.obtenerHorarioPorFecha(grupo.getId(), fecha);
+            if (horario == null) {
+                // No hay horario para este día, mostrar diálogo de advertencia
+                mostrarDialogoSinHorario(grupo, fecha);
+                return;
             }
+            
+            // Obtener horario del grupo para mostrar en el diálogo
+            String horarioClase = horario.getHoraInicio() + " - " + horario.getHoraFin();
             
             // Marcar asistencia usando el caso de uso
             boolean exito = asistenciaCU.marcarAsistencia(
@@ -227,6 +230,80 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         
         // Mostrar diálogo
         dialog.show();
+    }
+
+    /**
+     * Muestra un diálogo cuando no hay horario disponible para el día actual
+     */
+    private void mostrarDialogoSinHorario(Grupo grupo, String fecha) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_sin_horario);
+        dialog.setCancelable(true);
+        
+        // Configurar ventana del diálogo
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setDimAmount(0.6f);
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+        
+        // Obtener vistas
+        TextView tvTitulo = dialog.findViewById(R.id.tvTitulo);
+        TextView tvMensaje = dialog.findViewById(R.id.tvMensaje);
+        TextView tvMateria = dialog.findViewById(R.id.tvMateriaInfo);
+        TextView tvDia = dialog.findViewById(R.id.tvDiaInfo);
+        MaterialButton btnAceptar = dialog.findViewById(R.id.btnAceptar);
+        
+        // Obtener día de la semana en español
+        String diaSemana = obtenerDiaSemanaEspañol(fecha);
+        
+        // Configurar información
+        tvTitulo.setText(getString(R.string.dialog_sin_horario_titulo));
+        tvMensaje.setText(getString(R.string.dialog_sin_horario_mensaje));
+        tvMateria.setText(grupo.getMateriaNombre() + " - Grupo " + grupo.getGrupo());
+        tvDia.setText("Día: " + diaSemana + " (" + fecha + ")");
+        
+        // Botón aceptar
+        btnAceptar.setOnClickListener(v -> dialog.dismiss());
+        
+        // Mostrar diálogo
+        dialog.show();
+    }
+
+    /**
+     * Obtiene el día de la semana en español desde una fecha
+     */
+    private String obtenerDiaSemanaEspañol(String fecha) {
+        try {
+            LocalDate localDate = LocalDate.parse(fecha, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            java.time.DayOfWeek dayOfWeek = localDate.getDayOfWeek();
+            
+            switch (dayOfWeek) {
+                case MONDAY:
+                    return "Lunes";
+                case TUESDAY:
+                    return "Martes";
+                case WEDNESDAY:
+                    return "Miércoles";
+                case THURSDAY:
+                    return "Jueves";
+                case FRIDAY:
+                    return "Viernes";
+                case SATURDAY:
+                    return "Sábado";
+                case SUNDAY:
+                    return "Domingo";
+                default:
+                    return "Desconocido";
+            }
+        } catch (Exception e) {
+            return "Desconocido";
+        }
     }
 }
 

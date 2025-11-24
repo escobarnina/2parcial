@@ -69,12 +69,11 @@ public class AsistenciaCU {
             Horario horario = buscarHorarioPorDia(horarios, diaSemana);
             if (horario == null) {
                 Log.w(TAG, "No hay horario configurado para el día " + diaSemana + " en el grupo " + grupoId);
-                // Si no hay horario para ese día, usar el primer horario disponible como fallback
-                horario = horarios.get(0);
-                Log.d(TAG, "Usando horario de fallback: " + horario.getDia() + " " + horario.getHoraInicio() + "-" + horario.getHoraFin());
-            } else {
-                Log.d(TAG, "Horario encontrado para " + diaSemana + ": " + horario.getHoraInicio() + "-" + horario.getHoraFin());
+                // No permitir marcar asistencia si no hay horario para ese día
+                return false;
             }
+            
+            Log.d(TAG, "Horario encontrado para " + diaSemana + ": " + horario.getHoraInicio() + "-" + horario.getHoraFin());
 
             String horaInicio = horario.getHoraInicio();
             String horaFin = horario.getHoraFin();
@@ -142,6 +141,22 @@ public class AsistenciaCU {
      */
     public String getUltimoEstadoCalculado() {
         return ultimoEstadoCalculado;
+    }
+
+    /**
+     * Obtiene el horario del grupo para un día específico
+     * @param grupoId ID del grupo
+     * @param fecha Fecha en formato YYYY-MM-DD
+     * @return Horario del día o null si no existe
+     */
+    public Horario obtenerHorarioPorFecha(Integer grupoId, String fecha) {
+        List<Horario> horarios = Horario.obtenerHorariosGrupo(grupoId);
+        if (horarios.isEmpty()) {
+            return null;
+        }
+        
+        String diaSemana = obtenerDiaSemana(fecha);
+        return buscarHorarioPorDia(horarios, diaSemana);
     }
 
     /**
