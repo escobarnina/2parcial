@@ -4,11 +4,11 @@ import android.content.Context;
 import android.util.Log;
 
 import com.arquitectura.asistente.datos.Asistencia;
+import com.arquitectura.asistente.datos.AsistenciaExport;
+import com.arquitectura.asistente.datos.ExportResult;
 import com.arquitectura.asistente.datos.Grupo;
 import com.arquitectura.asistente.datos.Horario;
-import com.arquitectura.asistente.datos.adapter.AsistenciaExportDTO;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
-import com.arquitectura.asistente.datos.adapter.ExportResult;
 
 import java.util.List;
 
@@ -20,12 +20,12 @@ import java.util.List;
  * - Solo conoce la interface Target (DataExportAdapter)
  * - Delega la exportación al adapter sin saber cuál es
  * 
- * FLUJO DE CREACIÓN DE AsistenciaExportDTO:
+ * FLUJO DE CREACIÓN DE AsistenciaExport:
  * 1. Este UseCase llama a su instancia de Asistencia (asistenciaData)
  *    para obtener los datos completos mediante obtenerPorGrupoParaExportacion(grupoId)
- * 2. Asistencia (capa de datos) crea las instancias de AsistenciaExportDTO
- *    usando mapCursorToAsistenciaExportDTO() con datos de JOINs SQL
- * 3. Retorna List<AsistenciaExportDTO> con información completa
+ * 2. Asistencia (capa de datos) crea las instancias de AsistenciaExport
+ *    usando mapCursorToAsistenciaExport() con datos de JOINs SQL
+ * 3. Retorna List<AsistenciaExport> con información completa
  * 4. Este UseCase pasa la lista al adapter (Excel o PDF)
  * 5. El adapter utiliza los DTOs para generar el archivo (NO los crea)
  * 
@@ -47,8 +47,9 @@ public class ExportarAsistenciaCU {
     private Horario horarioData;
     
     // Relaciones adicionales requeridas por el diagrama
-    private List<AsistenciaExportDTO> asistenciasParaExportar;
+    private List<AsistenciaExport> asistenciasParaExportar;
     private ExportResult ultimoResultado;
+    private DataExportAdapter adapterActual;
 
     public ExportarAsistenciaCU(Context context) {
         // Crear instancias explícitas de las clases de datos
@@ -87,6 +88,9 @@ public class ExportarAsistenciaCU {
         Log.d(TAG, "Iniciando exportacion de asistencias para grupo ID: " + grupoId);
         
         try {
+            // Hacer visible la relación con el Adapter concreto que se está usando
+            this.adapterActual = adapter;
+
             // Validar ID del grupo
             if (grupoId == null || grupoId <= 0) {
                 ultimoResultado = ExportResult.error("ID de grupo inválido");
@@ -94,9 +98,9 @@ public class ExportarAsistenciaCU {
             }
 
             // Obtener las asistencias con información completa para exportación
-            // IMPORTANTE: Las instancias de AsistenciaExportDTO se CREAN aquí en la capa de datos
+            // IMPORTANTE: Las instancias de AsistenciaExport se CREAN aquí en la capa de datos
             // mediante asistenciaData.obtenerPorGrupoParaExportacion() que usa JOINs SQL
-            // y mapCursorToAsistenciaExportDTO() para mapear los resultados
+            // y mapCursorToAsistenciaExport() para mapear los resultados
             // Acceso a datos a través de la clase de datos (aunque use métodos estáticos)
             asistenciasParaExportar = 
                 asistenciaData.obtenerPorGrupoParaExportacion(grupoId);
@@ -153,12 +157,16 @@ public class ExportarAsistenciaCU {
         return horarioData.obtenerHorariosGrupo(grupoId);
     }
 
-    public List<AsistenciaExportDTO> getAsistenciasParaExportar() {
+    public List<AsistenciaExport> getAsistenciasParaExportar() {
         return asistenciasParaExportar;
     }
 
     public ExportResult getUltimoResultado() {
         return ultimoResultado;
+    }
+
+    public DataExportAdapter getAdapterActual() {
+        return adapterActual;
     }
 }
 

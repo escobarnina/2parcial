@@ -1,4 +1,4 @@
-package com.arquitectura.asistente.datos.adapter;
+package com.arquitectura.asistente.datos;
 
 /**
  * Clase que representa el resultado de una operación de exportación

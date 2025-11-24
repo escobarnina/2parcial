@@ -27,7 +27,7 @@ import com.arquitectura.asistente.datos.Grupo;
 import com.arquitectura.asistente.datos.adapter.AsistenciaExcelAdapter;
 import com.arquitectura.asistente.datos.adapter.AsistenciaPDFAdapter;
 import com.arquitectura.asistente.datos.adapter.DataExportAdapter;
-import com.arquitectura.asistente.datos.adapter.ExportResult;
+import com.arquitectura.asistente.datos.ExportResult;
 import com.arquitectura.asistente.negocio.ExportarAsistenciaCU;
 import com.arquitectura.asistente.presentacion.widget.GrupoAdapter;
 

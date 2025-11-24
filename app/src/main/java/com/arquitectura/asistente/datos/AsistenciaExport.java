@@ -1,4 +1,4 @@
-package com.arquitectura.asistente.datos.adapter;
+package com.arquitectura.asistente.datos;
 
 /**
  * DTO (Data Transfer Object) para exportación de asistencias
@@ -10,7 +10,7 @@ package com.arquitectura.asistente.datos.adapter;
  * Este DTO es utilizado por los adaptadores de exportación (Excel, PDF)
  * para obtener información completa sin modificar la entidad Asistencia.
  */
-public class AsistenciaExportDTO {
+public class AsistenciaExport {
     // Campos básicos de asistencia
     private Integer id;
     private Integer alumnoId;
@@ -34,7 +34,7 @@ public class AsistenciaExportDTO {
     private String docenteNombre; // Nombre completo del docente
 
     // Constructores
-    public AsistenciaExportDTO() {
+    public AsistenciaExport() {
     }
 
     // Getters y Setters

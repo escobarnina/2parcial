@@ -1,5 +1,7 @@
 package com.arquitectura.asistente.datos.adapter;
 
+import com.arquitectura.asistente.datos.AsistenciaExport;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,7 @@ import java.util.List;
  * Capa de Datos - Adapter Pattern - Target (Interface)
  * Define el contrato que deben cumplir todos los adaptadores de exportación
  * 
- * NOTA: Las instancias de AsistenciaExportDTO se crean en la capa de datos
+ * NOTA: Las instancias de AsistenciaExport se crean en la capa de datos
  * a través de la instancia de Asistencia (por ejemplo, asistenciaData.obtenerPorGrupoParaExportacion())
  * y se pasan a los adapters.
  * Los adapters NO crean instancias del DTO, solo las utilizan para generar el archivo.
@@ -24,7 +26,7 @@ public interface DataExportAdapter {
      * @return byte[] con el contenido del archivo generado
      * @throws Exception Si ocurre un error durante la exportación
      */
-    byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception;
+    byte[] exportar(List<AsistenciaExport> data, String nombreArchivo) throws Exception;
     
     /**
      * Obtiene la extensión del archivo para este formato

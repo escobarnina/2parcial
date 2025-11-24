@@ -6,7 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.arquitectura.asistente.datos.adapter.AsistenciaExportDTO;
+import com.arquitectura.asistente.datos.AsistenciaExport;
 import com.arquitectura.asistente.datos.database.DatabaseBaseDAO;
 
 import java.util.ArrayList;
@@ -278,17 +278,17 @@ public class Asistencia {
      * Hace JOINs con las tablas relacionadas para obtener nombres, materias, grupos, etc.
      * Retorna un DTO específico para exportación sin modificar la entidad Asistencia
      * 
-     * IMPORTANTE: Este método CREA las instancias de AsistenciaExportDTO.
-     * Cada registro del Cursor se mapea a un nuevo DTO usando mapCursorToAsistenciaExportDTO().
+     * IMPORTANTE: Este método CREA las instancias de AsistenciaExport.
+     * Cada registro del Cursor se mapea a un nuevo DTO usando mapCursorToAsistenciaExport().
      * Los adapters (Excel, PDF) reciben estas instancias ya creadas y solo las utilizan.
      * 
      * @param grupoId ID del grupo
-     * @return Lista de AsistenciaExportDTO con información completa (instancias creadas aquí)
+     * @return Lista de AsistenciaExport con información completa (instancias creadas aquí)
      */
-    public List<AsistenciaExportDTO> obtenerPorGrupoParaExportacion(Integer grupoId) {
+    public List<AsistenciaExport> obtenerPorGrupoParaExportacion(Integer grupoId) {
         verificarInicializacion();
         
-        List<AsistenciaExportDTO> asistenciasDTO = new ArrayList<>();
+        List<AsistenciaExport> asistenciasDTO = new ArrayList<>();
         SQLiteDatabase db = baseDAO.getReadableDatabase();
         
         // Consulta con JOINs para obtener información completa
@@ -315,7 +315,7 @@ public class Asistencia {
         
         try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(grupoId)})) {
             while (cursor.moveToNext()) {
-                asistenciasDTO.add(mapCursorToAsistenciaExportDTO(cursor));
+                asistenciasDTO.add(mapCursorToAsistenciaExport(cursor));
             }
         } catch (Exception e) {
             Log.e(TAG, "Error al obtener asistencias para exportación - Grupo: " + grupoId, e);
@@ -327,17 +327,17 @@ public class Asistencia {
     }
 
     /**
-     * Mapea un Cursor a un objeto AsistenciaExportDTO con información completa
+     * Mapea un Cursor a un objeto AsistenciaExport con información completa
      * 
-     * IMPORTANTE: Este método CREA una nueva instancia de AsistenciaExportDTO
+     * IMPORTANTE: Este método CREA una nueva instancia de AsistenciaExport
      * y la llena con los datos del Cursor (que proviene de JOINs SQL).
-     * Esta es la única ubicación donde se crean instancias de AsistenciaExportDTO.
+     * Esta es la única ubicación donde se crean instancias de AsistenciaExport.
      * 
      * @param cursor Cursor con los datos de la consulta SQL (incluye JOINs)
-     * @return Nueva instancia de AsistenciaExportDTO con todos los campos poblados
+     * @return Nueva instancia de AsistenciaExport con todos los campos poblados
      */
-    private AsistenciaExportDTO mapCursorToAsistenciaExportDTO(Cursor cursor) {
-        AsistenciaExportDTO dto = new AsistenciaExportDTO(); // CREACIÓN DE INSTANCIA
+    private AsistenciaExport mapCursorToAsistenciaExport(Cursor cursor) {
+        AsistenciaExport dto = new AsistenciaExport(); // CREACIÓN DE INSTANCIA
         
         // Campos básicos
         dto.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));

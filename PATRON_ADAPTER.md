@@ -54,7 +54,7 @@ public interface DataExportAdapter {
      * @return byte[] con el contenido del archivo generado
      * @throws Exception Si ocurre un error durante la exportación
      */
-    byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception;
+    byte[] exportar(List<AsistenciaExport> data, String nombreArchivo) throws Exception;
     
     String obtenerExtension();
     String obtenerTipoMime();
@@ -122,7 +122,7 @@ class SquarePegAdapter extends RoundPeg is
 public class AsistenciaExcelAdapter implements DataExportAdapter {
     
     @Override
-    public byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception {
+    public byte[] exportar(List<AsistenciaExport> data, String nombreArchivo) throws Exception {
         logger.info("Iniciando exportacion Excel - Cantidad: " + data.size());
         
         // El adaptador "envuelve" Apache POI (Adaptee)
@@ -141,7 +141,7 @@ public class AsistenciaExcelAdapter implements DataExportAdapter {
             
             // Convierte los datos del DTO a formato POI
             int rowNum = 1;
-            for (AsistenciaExportDTO dto : data) {
+            for (AsistenciaExport dto : data) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(dto.getId());
                 row.createCell(1).setCellValue(dto.getAlumnoRegistro());
@@ -176,7 +176,7 @@ public class AsistenciaExcelAdapter implements DataExportAdapter {
 public class AsistenciaPDFAdapter implements DataExportAdapter {
     
     @Override
-    public byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception {
+    public byte[] exportar(List<AsistenciaExport> data, String nombreArchivo) throws Exception {
         logger.info("Iniciando exportacion PDF - Cantidad: " + data.size());
         
         // El adaptador "envuelve" iText (Adaptee)
@@ -194,7 +194,7 @@ public class AsistenciaPDFAdapter implements DataExportAdapter {
             // ... más encabezados
             
             // Convierte los datos del DTO a formato iText
-            for (AsistenciaExportDTO dto : data) {
+            for (AsistenciaExport dto : data) {
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(dto.getId()))));
                 table.addCell(new Cell().add(new Paragraph(dto.getAlumnoRegistro())));
                 // ... adapta todos los campos del DTO a iText
@@ -225,7 +225,7 @@ public class AsistenciaPDFAdapter implements DataExportAdapter {
 }
 ```
 
-**Diferencia clave**: Los adaptadores convierten datos del DTO (`AsistenciaExportDTO`) al formato específico de cada librería externa y retornan el resultado en un formato común (`byte[]`).
+**Diferencia clave**: Los adaptadores convierten datos del DTO (`AsistenciaExport`) al formato específico de cada librería externa y retornan el resultado en un formato común (`byte[]`).
 
 ---
 
@@ -246,7 +246,7 @@ public class ExportarAsistenciaCU {
     private final Asistencia asistenciaData;
     private final Grupo grupoData;
     private final Horario horarioData;
-    private List<AsistenciaExportDTO> asistenciasParaExportar;
+    private List<AsistenciaExport> asistenciasParaExportar;
     private ExportResult ultimoResultado;
 
     public ExportarAsistenciaCU(Context context) {
@@ -307,7 +307,7 @@ public class ExportarAsistenciaCU {
 Para evitar modificar la entidad `Asistencia`, utilizamos un **DTO (Data Transfer Object)** que contiene toda la información necesaria para la exportación:
 
 ```java
-public class AsistenciaExportDTO {
+public class AsistenciaExport {
     // Campos básicos de asistencia
     private Integer id;
     private Integer alumnoId;
@@ -329,7 +329,7 @@ public class AsistenciaExportDTO {
 Este DTO se obtiene mediante un método especial en `Asistencia` que hace JOINs con las tablas relacionadas:
 
 ```java
-public static List<AsistenciaExportDTO> obtenerPorGrupoParaExportacion(Integer grupoId) {
+public static List<AsistenciaExport> obtenerPorGrupoParaExportacion(Integer grupoId) {
     // Consulta con JOINs para obtener información completa
     String sql = "SELECT " +
                 "a.id, a.alumno_id, a.grupo_id, a.fecha, a.hora_marcada, a.estado, " +
@@ -404,7 +404,7 @@ Una vez exportado el archivo, el sistema:
 │  - exportar()       │
 └──────────┬──────────┘
            │
-           │ 1. Obtener datos (AsistenciaExportDTO)
+           │ 1. Obtener datos (AsistenciaExport)
            │ 2. adapter.exportar(dto, nombreArchivo)
            ▼
 ┌─────────────────────┐
@@ -441,7 +441,7 @@ Una vez exportado el archivo, el sistema:
 
 2. **ExportarAsistenciaCU** (Client):
    - Valida `grupoId`
-   - Obtiene `List<AsistenciaExportDTO>` mediante JOINs
+   - Obtiene `List<AsistenciaExport>` mediante JOINs
    - Llama: `adapter.exportar(asistenciasDTO, "asistencias_grupo_1")`
 
 3. **AsistenciaExcelAdapter** (Adapter):
@@ -504,7 +504,7 @@ ExportResult r3 = exportarCU.exportar(grupoId, csv);
 ```
 datos/adapter/
 ├── DataExportAdapter.java          # Target (Interface)
-├── AsistenciaExportDTO.java        # DTO para exportación
+├── AsistenciaExport.java        # DTO para exportación
 ├── ExportResult.java               # Resultado de exportación
 ├── AsistenciaExcelAdapter.java     # Adapter 1 (POI)
 └── AsistenciaPDFAdapter.java       # Adapter 2 (iText)
@@ -530,7 +530,7 @@ datos/adapter/
 │  │   └── iText (Adaptee)                      │
 │  └── (Futuros adaptadores...)                  │
 │                                                 │
-│  AsistenciaExportDTO (DTO)                     │
+│  AsistenciaExport (DTO)                        │
 │  ExportResult (Resultado)                      │
 └─────────────────────────────────────────────────┘
 ```

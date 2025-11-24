@@ -1,5 +1,6 @@
 package com.arquitectura.asistente.datos.adapter;
 
+import com.arquitectura.asistente.datos.AsistenciaExport;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
@@ -15,7 +16,7 @@ import java.util.logging.Logger;
  * Capa de Datos - Adapter Pattern - Adapter 2
  * Adapta iText (Adaptee) a DataExportAdapter (Target)
  * 
- * NOTA: Este adapter NO crea instancias de AsistenciaExportDTO.
+ * NOTA: Este adapter NO crea instancias de AsistenciaExport.
  * Las instancias se crean mediante la instancia de Asistencia
  * (método obtenerPorGrupoParaExportacion()) y se pasan como parámetro.
  * Este adapter solo las utiliza para generar el archivo PDF.
@@ -24,7 +25,7 @@ public class AsistenciaPDFAdapter implements DataExportAdapter {
     private static final Logger logger = Logger.getLogger(AsistenciaPDFAdapter.class.getName());
 
     @Override
-    public byte[] exportar(List<AsistenciaExportDTO> data, String nombreArchivo) throws Exception {
+    public byte[] exportar(List<AsistenciaExport> data, String nombreArchivo) throws Exception {
         logger.info("Iniciando exportacion PDF - Cantidad: " + data.size());
         
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -51,7 +52,7 @@ public class AsistenciaPDFAdapter implements DataExportAdapter {
             table.addHeaderCell(new Cell().add(new Paragraph("Estado")));
             
             // Datos con información completa
-            for (AsistenciaExportDTO dto : data) {
+            for (AsistenciaExport dto : data) {
                 table.addCell(new Cell().add(new Paragraph(String.valueOf(dto.getId() != null ? dto.getId() : 0))));
                 table.addCell(new Cell().add(new Paragraph(dto.getAlumnoRegistro() != null ? dto.getAlumnoRegistro() : "")));
                 table.addCell(new Cell().add(new Paragraph(dto.getAlumnoNombre() != null ? dto.getAlumnoNombre() : "")));
