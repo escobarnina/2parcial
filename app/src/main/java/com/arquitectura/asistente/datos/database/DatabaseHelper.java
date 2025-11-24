@@ -12,6 +12,10 @@ import com.arquitectura.asistente.datos.database.DatabaseSeeder;
  * Helper para la gestión de la base de datos SQLite en Android
  * Capa de Datos - Gestión de Base de Datos
  * Adaptado de MySQL a SQLite para Android
+ * 
+ * RELACIONES:
+ * - DatabaseHelper <- DatabaseBaseDAO (usado por DatabaseBaseDAO)
+ * - DatabaseHelper <- AsistenciaCU (instancia creada en AsistenciaCU)
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";

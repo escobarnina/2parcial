@@ -17,11 +17,15 @@ import java.util.List;
  * 
  * Contiene métodos estáticos para acceso a datos que muestran
  * cómo desde la clase de datos se conecta directamente con la base de datos
+ * 
+ * RELACIONES:
+ * - Grupo -> DatabaseBaseDAO (instancia estática compartida)
+ * - DatabaseBaseDAO -> DatabaseHelper (instancia estática compartida)
  */
 public class Grupo {
     private static final String TAG = "Grupo";
     private static final String TABLE_NAME = "grupos";
-    private static DatabaseBaseDAO baseDAO;
+    private static DatabaseBaseDAO baseDAO; // Relación explícita con DatabaseBaseDAO
     private static Context context;
     private Integer id;
     private String grupo; // Paralelo (A, B, etc.)

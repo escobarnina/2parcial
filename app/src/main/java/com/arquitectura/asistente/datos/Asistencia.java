@@ -18,11 +18,15 @@ import java.util.List;
  * 
  * Contiene métodos estáticos para acceso a datos que muestran
  * cómo desde la clase de datos se conecta directamente con la base de datos
+ * 
+ * RELACIONES:
+ * - Asistencia -> DatabaseBaseDAO (instancia estática compartida)
+ * - DatabaseBaseDAO -> DatabaseHelper (instancia estática compartida)
  */
 public class Asistencia {
     private static final String TAG = "Asistencia";
     private static final String TABLE_NAME = "asistencias";
-    private static DatabaseBaseDAO baseDAO;
+    private static DatabaseBaseDAO baseDAO; // Relación explícita con DatabaseBaseDAO
     private static Context context;
 
     private Integer id;

@@ -20,6 +20,16 @@ import java.util.List;
  * Capa de Negocio - Strategy Pattern - Context (Contexto)
  * Este caso de uso actúa como contexto que usa diferentes estrategias
  * para calcular el estado de asistencia (PRESENTE, RETRASO, FALTA)
+ * 
+ * RELACIONES (Capa de Negocio):
+ * - AsistenciaCU -> Asistencia (capa de datos)
+ * - AsistenciaCU -> Grupo (capa de datos)
+ * - AsistenciaCU -> Horario (capa de datos)
+ * 
+ * NOTA: Las relaciones con DatabaseBaseDAO y DatabaseHelper son responsabilidad
+ * de la capa de datos (Asistencia, Grupo, Horario), no de la capa de negocio.
+ * La capa de negocio solo trabaja con las clases de datos, que internamente
+ * gestionan su acceso a la base de datos.
  */
 public class AsistenciaCU {
     private static final String TAG = "AsistenciaCU";
@@ -28,6 +38,8 @@ public class AsistenciaCU {
 
     public AsistenciaCU(Context context) {
         // Inicializar acceso a datos de todas las entidades necesarias
+        // Las clases de datos (Asistencia, Grupo, Horario) son las que internamente
+        // se relacionan con DatabaseBaseDAO y DatabaseHelper (capa de datos)
         Asistencia.inicializar(context);
         Grupo.inicializar(context);
         Horario.inicializar(context);

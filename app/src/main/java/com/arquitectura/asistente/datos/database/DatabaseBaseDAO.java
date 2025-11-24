@@ -10,11 +10,15 @@ import android.util.Log;
  * DAO Genérico Base para operaciones CRUD básicas
  * Capa de Datos - Database - Proporciona métodos genéricos para acceso a datos
  * Los repositorios de la capa datos usan estos métodos genéricos
+ * 
+ * RELACIONES:
+ * - DatabaseBaseDAO -> DatabaseHelper (instancia, relación de composición)
+ * - DatabaseBaseDAO <- Asistencia, Grupo, Horario (usado por estas clases)
  */
 public class DatabaseBaseDAO {
     private static final String TAG = "DatabaseBaseDAO";
     private static DatabaseBaseDAO instance;
-    private DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper; // Relación explícita con DatabaseHelper
     private Context context;
 
     private DatabaseBaseDAO(Context context) {
