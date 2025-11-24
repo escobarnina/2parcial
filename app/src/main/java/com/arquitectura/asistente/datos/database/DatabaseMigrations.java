@@ -91,9 +91,7 @@ public class DatabaseMigrations {
         String sql = "CREATE TABLE IF NOT EXISTS grupos (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "materia_id INTEGER NOT NULL, " +
-                "materia_nombre TEXT NOT NULL, " +
                 "docente_id INTEGER NOT NULL, " +
-                "docente_nombre TEXT NOT NULL, " +
                 "grupo TEXT NOT NULL, " +
                 "semestre INTEGER NOT NULL CHECK(semestre IN (1, 2)), " +
                 "gestion INTEGER NOT NULL, " +

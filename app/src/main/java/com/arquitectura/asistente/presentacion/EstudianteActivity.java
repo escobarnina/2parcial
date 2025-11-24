@@ -34,7 +34,8 @@ public class EstudianteActivity extends AppCompatActivity {
     private AsistenciaCU asistenciaCU;
     
     // ID del estudiante (en una app real, esto vendría del login)
-    private static final Integer ESTUDIANTE_ID = 1; // Por defecto estudiante1
+    // Estudiante 1 (Ana García) tiene 9 materias inscritas - el que más tiene
+    private static final Integer ESTUDIANTE_ID = 1; // Ana García - 9 materias inscritas
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

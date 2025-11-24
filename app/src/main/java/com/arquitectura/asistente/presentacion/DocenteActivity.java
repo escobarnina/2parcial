@@ -34,7 +34,8 @@ public class DocenteActivity extends AppCompatActivity {
     private ExportarAsistenciaCU exportarCU;
     
     // ID del docente (en una app real, esto vendría del login)
-    private static final Integer DOCENTE_ID = 4; // Por defecto docente1
+    // Docente 2 (María Fernández, id=62) tiene 4 materias - el que más tiene
+    private static final Integer DOCENTE_ID = 62; // María Fernández - 4 materias (Programación I, BD I, BD II, Ing. Software)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
