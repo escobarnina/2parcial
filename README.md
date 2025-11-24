@@ -44,6 +44,9 @@ com.arquitectura.asistente/
 
 ### Funcionalidades Avanzadas
 - 📊 **Exportación de Reportes**: Exportar asistencias a Excel (.xlsx) y PDF
+  - Los archivos se guardan en la carpeta de Descargas con nombre único (incluye fecha y hora)
+  - Diálogo de confirmación con información del archivo exportado
+  - Botón para abrir el explorador de archivos en la carpeta de Descargas
 - 🎯 **Patrón Strategy**: Cálculo flexible de estados de asistencia (PRESENTE, RETRASO, FALTA)
 - 🔌 **Patrón Adapter**: Exportación a múltiples formatos sin modificar código cliente
 - 📅 **Validación de Horarios**: Verificación estricta de días y horas para marcar asistencia
@@ -53,6 +56,7 @@ com.arquitectura.asistente/
 - 📱 **Interfaz Moderna**: Uso de Material Design y Jetpack Compose
   - Tarjetas de grupos con información de horarios y días visibles
   - Diseño con Material Design y esquema de colores destacado
+  - BottomSheetDialog moderno para opciones de exportación
 
 ## 🛠️ Tecnologías Utilizadas
 

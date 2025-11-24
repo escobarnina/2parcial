@@ -369,6 +369,20 @@ ExportResult resultadoPDF = exportarCU.exportar(grupoId, pdfAdapter);
 // Solo sabe que ambos implementan DataExportAdapter
 ```
 
+### Gestión de Archivos Exportados
+
+Una vez exportado el archivo, el sistema:
+
+1. **Guarda el archivo** en la carpeta de Descargas usando MediaStore (compatible con Android 10+)
+2. **Muestra un diálogo** con la información del archivo exportado:
+   - Formato (Excel o PDF)
+   - Cantidad de registros exportados
+   - Nombre del archivo con fecha y hora
+   - Ubicación (carpeta de Descargas)
+3. **Proporciona un botón** "Ver en Descargas" que abre el explorador de archivos nativo de Android en la carpeta de Descargas, permitiendo al usuario acceder directamente al archivo exportado
+
+**Nota**: El sistema no intenta abrir el archivo directamente, ya que no se puede garantizar que el dispositivo tenga aplicaciones para visualizar Excel o PDF. En su lugar, abre el explorador de archivos donde el usuario puede elegir qué aplicación usar.
+
 ---
 
 ## Flujo de Ejecución
@@ -441,7 +455,9 @@ ExportResult resultadoPDF = exportarCU.exportar(grupoId, pdfAdapter);
    - Retorna resultado al cliente
 
 5. **DocenteActivity** (Presentación):
-   - Muestra mensaje de éxito con cantidad de registros exportados
+   - Guarda el archivo en la carpeta de Descargas usando MediaStore
+   - Muestra diálogo de éxito con información del archivo exportado
+   - Proporciona botón para abrir el explorador de archivos en la carpeta de Descargas
 
 ---
 

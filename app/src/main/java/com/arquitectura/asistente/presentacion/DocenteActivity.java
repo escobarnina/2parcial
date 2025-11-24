@@ -1,7 +1,9 @@
 package com.arquitectura.asistente.presentacion;
 
+import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
 import com.arquitectura.asistente.datos.Horario;
@@ -126,19 +130,19 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
             
             if (resultado.isSuccess()) {
                 // Guardar archivo en Downloads usando MediaStore
-                boolean guardado = guardarArchivoEnDownloads(
+                Uri uriArchivo = guardarArchivoEnDownloads(
                     resultado.getDatos(),
                     resultado.getNombreArchivo(),
                     resultado.getExtension(),
                     resultado.getTipoMime()
                 );
                 
-                if (guardado) {
-                    String mensaje = getString(R.string.exportacion_exito) + "\n" +
-                                   "Formato: " + resultado.getFormato() + "\n" +
-                                   "Registros: " + resultado.getCantidadRegistros() + "\n" +
-                                   "Archivo guardado en Descargas";
-                    Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show();
+                if (uriArchivo != null) {
+                    // Extraer solo el nombre del archivo del URI
+                    String nombreArchivo = obtenerNombreArchivoDeUri(uriArchivo);
+                    
+                    // Mostrar diálogo con información completa del archivo exportado
+                    mostrarDialogoExportacionExitosa(resultado, nombreArchivo, uriArchivo);
                 } else {
                     Toast.makeText(this, 
                         "Error al guardar el archivo",
@@ -163,14 +167,15 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
      * @param nombreBase Nombre base del archivo (sin extensión)
      * @param extension Extensión del archivo (ej: "xlsx", "pdf")
      * @param tipoMime Tipo MIME del archivo (ej: "application/vnd.ms-excel", "application/pdf")
-     * @return true si se guardó correctamente, false en caso contrario
+     * @return URI del archivo guardado, o null si hubo error
      */
-    private boolean guardarArchivoEnDownloads(byte[] datos, String nombreBase, String extension, String tipoMime) {
+    private Uri guardarArchivoEnDownloads(byte[] datos, String nombreBase, String extension, String tipoMime) {
         try {
             ContentResolver resolver = getContentResolver();
             
-            // Generar nombre único con timestamp
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+            // Generar nombre único con fecha y hora legible
+            // Formato: nombre_base_2025-01-27_14-30-45.extensión
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault());
             String timestamp = sdf.format(new Date());
             String nombreArchivo = nombreBase + "_" + timestamp + "." + extension;
             
@@ -189,8 +194,9 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
                         if (outputStream != null) {
                             outputStream.write(datos);
                             outputStream.flush();
-                            Log.d("DocenteActivity", "Archivo guardado: " + nombreArchivo);
-                            return true;
+                            
+                            Log.d("DocenteActivity", "Archivo guardado: " + nombreArchivo + " (URI: " + uri.toString() + ")");
+                            return uri;
                         }
                     }
                 }
@@ -200,15 +206,134 @@ public class DocenteActivity extends AppCompatActivity implements GrupoAdapter.O
                 Toast.makeText(this, 
                     "Esta versión de Android no es compatible",
                     Toast.LENGTH_SHORT).show();
-                return false;
+                return null;
             }
             
         } catch (Exception e) {
             Log.e("DocenteActivity", "Error al guardar archivo: " + e.getMessage(), e);
-            return false;
+            return null;
         }
         
-        return false;
+        return null;
+    }
+    
+    /**
+     * Obtiene el nombre del archivo desde su URI usando MediaStore
+     * 
+     * @param uri URI del archivo
+     * @return Nombre del archivo o "archivo" si no se puede obtener
+     */
+    private String obtenerNombreArchivoDeUri(Uri uri) {
+        try {
+            ContentResolver resolver = getContentResolver();
+            String[] projection = {MediaStore.Downloads.DISPLAY_NAME};
+            
+            android.database.Cursor cursor = resolver.query(uri, projection, null, null, null);
+            
+            if (cursor != null && cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndexOrThrow(MediaStore.Downloads.DISPLAY_NAME);
+                String nombreArchivo = cursor.getString(nameIndex);
+                cursor.close();
+                return nombreArchivo;
+            }
+            
+            if (cursor != null) {
+                cursor.close();
+            }
+            
+        } catch (Exception e) {
+            Log.e("DocenteActivity", "Error al obtener nombre del archivo: " + e.getMessage(), e);
+        }
+        
+        return "archivo";
+    }
+    
+    /**
+     * Muestra un diálogo con la información completa del archivo exportado
+     */
+    private void mostrarDialogoExportacionExitosa(ExportResult resultado, String nombreArchivo, Uri uriArchivo) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_exportacion_exitosa);
+        dialog.setCancelable(true);
+        
+        // Configurar ventana del diálogo
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.setDimAmount(0.6f);
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT
+            );
+        }
+        
+        // Obtener vistas
+        TextView tvFormato = dialog.findViewById(R.id.tvFormato);
+        TextView tvRegistros = dialog.findViewById(R.id.tvRegistros);
+        TextView tvNombreArchivo = dialog.findViewById(R.id.tvNombreArchivo);
+        MaterialButton btnAbrir = dialog.findViewById(R.id.btnAbrir);
+        
+        // Configurar información
+        tvFormato.setText("Formato: " + resultado.getFormato());
+        tvRegistros.setText("Registros exportados: " + resultado.getCantidadRegistros());
+        tvNombreArchivo.setText(nombreArchivo);
+        
+        // Botón abrir explorador de archivos
+        btnAbrir.setOnClickListener(v -> {
+            dialog.dismiss();
+            abrirExploradorDeArchivos();
+        });
+        
+        // Mostrar diálogo
+        dialog.show();
+    }
+    
+    /**
+     * Abre el explorador de archivos nativo de Android en la carpeta de Descargas
+     * donde se guardó el archivo exportado
+     */
+    private void abrirExploradorDeArchivos() {
+        try {
+            // Intentar abrir el explorador de archivos en la carpeta de Descargas
+            // Usar el URI de DocumentsContract para la carpeta de Descargas
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            
+            // Construir URI para la carpeta de Descargas
+            // Formato: content://com.android.externalstorage.documents/document/primary:Download
+            Uri downloadsUri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload");
+            
+            intent.setDataAndType(downloadsUri, "resource/folder");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            
+            // Verificar si hay alguna aplicación que pueda manejar este intent
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                startActivity(intent);
+                return;
+            }
+            
+            // Método alternativo: Intent con ACTION_GET_CONTENT para explorador genérico
+            Intent alternateIntent = new Intent(Intent.ACTION_GET_CONTENT);
+            alternateIntent.setType("*/*");
+            alternateIntent.addCategory(Intent.CATEGORY_OPENABLE);
+            
+            if (alternateIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(alternateIntent);
+                return;
+            }
+            
+            // Si no se puede abrir el explorador, informar al usuario
+            Toast.makeText(this, 
+                "No se encontró un explorador de archivos disponible. El archivo se guardó en la carpeta Descargas",
+                Toast.LENGTH_LONG).show();
+            
+        } catch (Exception e) {
+            Log.e("DocenteActivity", "Error al abrir explorador de archivos: " + e.getMessage(), e);
+            Toast.makeText(this, 
+                "No se pudo abrir el explorador. El archivo se guardó en la carpeta Descargas",
+                Toast.LENGTH_LONG).show();
+        }
     }
 }
 

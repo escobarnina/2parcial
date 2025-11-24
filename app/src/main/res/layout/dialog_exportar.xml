@@ -22,8 +22,8 @@
         android:id="@+id/tvMateriaInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="#757575"
+        android:textSize="20sp"
+        android:textColor="#212121"
         android:gravity="center"
         android:paddingHorizontal="24dp"
         android:layout_marginBottom="16dp" />
