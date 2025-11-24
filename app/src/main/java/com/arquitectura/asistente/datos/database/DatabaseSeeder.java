@@ -263,6 +263,33 @@ public class DatabaseSeeder {
             Log.w(TAG, "Error al insertar horarios: " + e.getMessage(), e);
             throw new RuntimeException("Error al insertar horarios", e);
         }
+        
+        // Agregar horario especial domingo 23:00-00:00 para grupos del estudiante 1 (Ana García)
+        // Estudiante 1 está inscrito en grupos: 1, 9, 13, 17, 21, 25, 29
+        seedHorarioEspecialEstudiante1(db);
+    }
+    
+    /**
+     * Agrega horario especial domingo 23:00-00:00 para los grupos del estudiante 1
+     * El estudiante 1 (Ana García) está inscrito en grupos: 1, 9, 13, 17, 21, 25, 29
+     */
+    private static void seedHorarioEspecialEstudiante1(SQLiteDatabase db) {
+        int[] gruposEstudiante1 = {1, 9, 13, 17, 21, 25, 29};
+        StringBuilder sql = new StringBuilder("INSERT INTO horarios(grupo_id, dia, hora_inicio, hora_fin) VALUES ");
+        
+        for (int i = 0; i < gruposEstudiante1.length; i++) {
+            int grupoId = gruposEstudiante1[i];
+            sql.append(String.format("(%d, 'Domingo', '23:00', '00:00')", grupoId));
+            if (i < gruposEstudiante1.length - 1) sql.append(", ");
+        }
+        
+        try {
+            db.execSQL(sql.toString());
+            Log.d(TAG, "Horario especial domingo 23:00-00:00 agregado para grupos del estudiante 1");
+        } catch (Exception e) {
+            Log.w(TAG, "Error al insertar horario especial del estudiante 1: " + e.getMessage(), e);
+            throw new RuntimeException("Error al insertar horario especial del estudiante 1", e);
+        }
     }
 
     /**
