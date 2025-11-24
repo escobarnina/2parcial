@@ -54,6 +54,9 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         setContentView(R.layout.activity_estudiante);
         
         // Inicializar casos de uso y acceso a datos
+        // IMPORTANTE: Asistencia se inicializa dentro de AsistenciaCU
+        // pero también necesitamos inicializarlo aquí para validaciones
+        com.arquitectura.asistente.datos.Asistencia.inicializar(this);
         this.asistenciaCU = new AsistenciaCU(this);
         Grupo.inicializar(this);
         Horario.inicializar(this);

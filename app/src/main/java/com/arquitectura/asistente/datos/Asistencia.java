@@ -172,6 +172,7 @@ public class Asistencia {
 
     /**
      * Verifica si un alumno está inscrito en un grupo (consulta personalizada)
+     * Valida que exista una inscripción activa en la tabla boletas
      */
     public static boolean estaInscrito(Integer alumnoId, Integer grupoId) {
         verificarInicializacion();
@@ -184,14 +185,17 @@ public class Asistencia {
                 String.valueOf(grupoId)
         })) {
             if (cursor.moveToFirst()) {
-                return cursor.getInt(0) > 0;
+                int count = cursor.getInt(0);
+                Log.d(TAG, "Verificación de inscripción - Alumno: " + alumnoId + ", Grupo: " + grupoId + ", Count: " + count);
+                return count > 0;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error al verificar inscripcion", e);
+            Log.e(TAG, "Error al verificar inscripcion - Alumno: " + alumnoId + ", Grupo: " + grupoId, e);
         } finally {
             db.close();
         }
         
+        Log.w(TAG, "No se encontró inscripción - Alumno: " + alumnoId + ", Grupo: " + grupoId);
         return false;
     }
 

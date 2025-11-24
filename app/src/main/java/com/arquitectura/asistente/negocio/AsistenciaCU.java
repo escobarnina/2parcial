@@ -48,11 +48,16 @@ public class AsistenciaCU {
      */
     public boolean marcarAsistencia(Integer alumnoId, Integer grupoId, String fecha, String horaMarcado) {
         try {
-            // Validar que el alumno esté inscrito
-            if (!Asistencia.estaInscrito(alumnoId, grupoId)) {
-                Log.w(TAG, "El alumno " + alumnoId + " no está inscrito en el grupo " + grupoId);
+            // Validar que el alumno esté inscrito en el grupo
+            boolean inscrito = Asistencia.estaInscrito(alumnoId, grupoId);
+            Log.d(TAG, "Validando inscripción - Alumno: " + alumnoId + ", Grupo: " + grupoId + ", Inscrito: " + inscrito);
+            
+            if (!inscrito) {
+                Log.w(TAG, "El alumno " + alumnoId + " NO está inscrito en el grupo " + grupoId);
                 return false;
             }
+            
+            Log.d(TAG, "Validación de inscripción exitosa - Alumno " + alumnoId + " está inscrito en grupo " + grupoId);
 
             // Obtener horarios del grupo para validar
             List<Horario> horarios = Horario.obtenerHorariosGrupo(grupoId);
