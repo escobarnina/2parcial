@@ -132,7 +132,11 @@ application-local.properties
 test-results/
 reports/
 *.html
+# XML files (except resource files)
 *.xml
+# But allow resource XML files
+!app/src/main/res/**/*.xml
+!app/src/main/AndroidManifest.xml
 
 # Coverage reports
 .nyc_output/

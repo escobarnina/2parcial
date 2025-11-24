@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Sistema de Asistencia</string>
+    <string name="app_title">Sistema de Gestión de Asistencias</string>
+    
+    <!-- Modos de acceso -->
+    <string name="modo_estudiante">Modo Estudiante</string>
+    <string name="modo_estudiante_desc">Marca tu asistencia en las materias inscritas</string>
+    <string name="modo_docente">Modo Docente</string>
+    <string name="modo_docente_desc">Exporta reportes de asistencia por materia</string>
+    
+    <!-- Estudiante -->
+    <string name="estudiante_titulo">Marcar Asistencia</string>
+    <string name="estudiante_seleccionar_materia">Selecciona una materia</string>
+    <string name="estudiante_marcar">Marcar Asistencia</string>
+    <string name="estudiante_sin_materias">No tienes materias inscritas</string>
+    
+    <!-- Docente -->
+    <string name="docente_titulo">Exportar Asistencias</string>
+    <string name="docente_seleccionar_materia">Selecciona una materia</string>
+    <string name="docente_exportar_excel">Exportar a Excel</string>
+    <string name="docente_exportar_pdf">Exportar a PDF</string>
+    <string name="docente_sin_materias">No tienes materias asignadas</string>
+    
+    <!-- Mensajes -->
+    <string name="asistencia_marcada_exito">Asistencia marcada exitosamente</string>
+    <string name="asistencia_error">Error al marcar asistencia</string>
+    <string name="exportacion_exito">Archivo exportado exitosamente</string>
+    <string name="exportacion_error">Error al exportar archivo</string>
+    
+    <!-- Acciones -->
+    <string name="ingresar">Ingresar</string>
+</resources>

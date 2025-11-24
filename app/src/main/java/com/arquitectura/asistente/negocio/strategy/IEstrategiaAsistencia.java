@@ -12,9 +12,9 @@ public interface IEstrategiaAsistencia {
      * 
      * @param horaMarcado Hora en que el estudiante marcó asistencia (formato HH:mm)
      * @param horaInicio Hora de inicio de la clase (formato HH:mm)
-     * @param toleranciaMinutos Tolerancia en minutos obtenida de la BD (configurable por grupo)
+     * @param horaFin Hora de finalización de la clase (formato HH:mm)
      * @return Estado de asistencia: "PRESENTE", "RETRASO" o "FALTA"
      */
-    String calcularEstado(String horaMarcado, String horaInicio, Integer toleranciaMinutos);
+    String calcularEstado(String horaMarcado, String horaInicio, String horaFin);
 }
 

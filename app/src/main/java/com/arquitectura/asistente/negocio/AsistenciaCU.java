@@ -57,11 +57,12 @@ public class AsistenciaCU {
                 return false;
             }
 
-            // Obtener la hora de inicio del primer horario (simplificado)
-            String horaInicio = horarios.get(0).getHoraInicio();
+            // Obtener la hora de inicio y fin del primer horario (simplificado)
+            Horario horario = horarios.get(0);
+            String horaInicio = horario.getHoraInicio();
+            String horaFin = horario.getHoraFin();
 
-            // Obtener tolerancia y tipo de estrategia del grupo
-            Integer toleranciaMinutos = Grupo.obtenerToleranciaGrupo(grupoId);
+            // Obtener tipo de estrategia del grupo
             String tipoEstrategia = Grupo.obtenerTipoEstrategiaGrupo(grupoId);
 
             // Configurar estrategia automáticamente desde BD si no está configurada
@@ -80,8 +81,8 @@ public class AsistenciaCU {
             }
 
             // Delegar el cálculo del estado a la estrategia (Strategy Pattern)
-            String estado = estrategia.calcularEstado(horaMarcado, horaInicio, toleranciaMinutos);
-            Log.d(TAG, "Estado calculado por la estrategia: " + estado + " (tolerancia: " + toleranciaMinutos + " min)");
+            String estado = estrategia.calcularEstado(horaMarcado, horaInicio, horaFin);
+            Log.d(TAG, "Estado calculado por la estrategia: " + estado + " (Inicio: " + horaInicio + ", Fin: " + horaFin + ")");
 
             // Crear y guardar la asistencia
             Asistencia asistencia = new Asistencia();
