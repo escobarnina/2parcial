@@ -80,6 +80,7 @@ public class EstudianteActivity extends AppCompatActivity implements GrupoAdapte
         // Configurar RecyclerView
         recyclerViewGrupos.setLayoutManager(new LinearLayoutManager(this));
         grupoAdapter = new GrupoAdapter(this);
+        grupoAdapter.setContext(this);
         recyclerViewGrupos.setAdapter(grupoAdapter);
         
         // Inicializar handler para actualizar hora

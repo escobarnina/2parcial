@@ -5,8 +5,9 @@
 2. [Mapeo del Patrón Strategy](#mapeo-del-patrón-strategy)
 3. [Comparación con Pseudocódigo](#comparación-con-pseudocódigo)
 4. [Implementación en el Sistema](#implementación-en-el-sistema)
-5. [Flujo de Ejecución](#flujo-de-ejecución)
-6. [Ventajas del Patrón](#ventajas-del-patrón)
+5. [Validación de Horario](#validación-de-horario)
+6. [Flujo de Ejecución](#flujo-de-ejecución)
+7. [Ventajas del Patrón](#ventajas-del-patrón)
 
 ---
 
@@ -50,7 +51,8 @@ public interface IEstrategiaAsistencia {
      * @param horaMarcado Hora en que el estudiante marcó asistencia (formato HH:mm)
      * @param horaInicio Hora de inicio de la clase (formato HH:mm)
      * @param horaFin Hora de finalización de la clase (formato HH:mm)
-     * @return Estado de asistencia: "PRESENTE", "RETRASO" o "FALTA"
+     * @return Estado de asistencia: "PRESENTE", "RETRASO" o "FALTA". 
+     *         Retorna null si está fuera del horario de clase y no se puede marcar asistencia.
      */
     String calcularEstado(String horaMarcado, String horaInicio, String horaFin);
 }
@@ -84,9 +86,10 @@ class ConcreteStrategyMultiply implements Strategy is
 public class EstrategiaPresente implements IEstrategiaAsistencia {
     @Override
     public String calcularEstado(String horaMarcado, String horaInicio, String horaFin) {
-        // Verificar si está fuera del horario de finalización
-        if (estaFueraDelHorario(horaMarcado, horaFin)) {
-            return "FALTA";
+        // Verificar si está fuera del rango de horario [horaInicio, horaFin]
+        if (estaFueraDelHorario(horaMarcado, horaInicio, horaFin)) {
+            logger.info("Fuera del horario de clase → null (no se puede marcar asistencia)");
+            return null;  // No se puede marcar asistencia fuera del horario
         }
         // Estrategia Muy Flexible: siempre PRESENTE si está dentro del horario
         return "PRESENTE";
@@ -101,9 +104,10 @@ public class EstrategiaRetraso implements IEstrategiaAsistencia {
     
     @Override
     public String calcularEstado(String horaMarcado, String horaInicio, String horaFin) {
-        // Verificar si está fuera del horario
-        if (estaFueraDelHorario(horaMarcado, horaFin)) {
-            return "FALTA";
+        // Verificar si está fuera del rango de horario [horaInicio, horaFin]
+        if (estaFueraDelHorario(horaMarcado, horaInicio, horaFin)) {
+            logger.info("Fuera del horario de clase → null (no se puede marcar asistencia)");
+            return null;  // No se puede marcar asistencia fuera del horario
         }
         
         int diferencia = calcularDiferenciaMinutos(horaMarcado, horaInicio);
@@ -127,9 +131,10 @@ public class EstrategiaFalta implements IEstrategiaAsistencia {
     
     @Override
     public String calcularEstado(String horaMarcado, String horaInicio, String horaFin) {
-        // Verificar si está fuera del horario
-        if (estaFueraDelHorario(horaMarcado, horaFin)) {
-            return "FALTA";
+        // Verificar si está fuera del rango de horario [horaInicio, horaFin]
+        if (estaFueraDelHorario(horaMarcado, horaInicio, horaFin)) {
+            logger.info("Fuera del horario de clase → null (no se puede marcar asistencia)");
+            return null;  // No se puede marcar asistencia fuera del horario
         }
         
         int diferencia = calcularDiferenciaMinutos(horaMarcado, horaInicio);
@@ -206,6 +211,13 @@ public class AsistenciaCU {
         
         // Delegar el cálculo del estado a la estrategia (Strategy Pattern)
         String estado = estrategia.calcularEstado(horaMarcado, horaInicio, horaFin);
+        
+        // Si el estado es null, significa que está fuera del horario y no se puede marcar asistencia
+        if (estado == null) {
+            Log.w(TAG, "No se puede marcar asistencia: fuera del horario de clase");
+            this.ultimoEstadoCalculado = null;
+            return false;  // No se registra la asistencia
+        }
         
         // ... guardar asistencia ...
         return true;
@@ -313,8 +325,54 @@ El flujo de selección automática funciona así:
    - `"FALTA"` → `new EstrategiaFalta()`
    - `"RETRASO"` o default → `new EstrategiaRetraso()`
 4. **Context** delega el cálculo a la estrategia: `estrategia.calcularEstado(...)`
-5. **Estrategia** retorna el estado calculado
-6. **Context** guarda la asistencia con el estado
+5. **Estrategia** retorna el estado calculado o `null` si está fuera del horario
+6. **Context** valida el resultado:
+   - Si `estado == null`: No guarda asistencia y retorna `false`
+   - Si `estado != null`: Guarda la asistencia con el estado y retorna `true`
+7. **Cliente** muestra diálogo informativo si está fuera del horario
+
+---
+
+## Validación de Horario
+
+### Comportamiento Unificado
+
+Todas las estrategias implementan una **validación unificada de horario** que verifica que la asistencia se marque dentro del rango `[horaInicio, horaFin]`:
+
+```java
+private boolean estaFueraDelHorario(String horaMarcado, String horaInicio, String horaFin) {
+    int minutosMarcado = convertirHoraAMinutos(horaMarcado);
+    int minutosInicio = convertirHoraAMinutos(horaInicio);
+    int minutosFin = convertirHoraAMinutos(horaFin);
+    
+    // Está fuera si es antes de horaInicio o después de horaFin
+    return minutosMarcado < minutosInicio || minutosMarcado > minutosFin;
+}
+```
+
+### Retorno null
+
+Cuando una estrategia detecta que se intenta marcar asistencia fuera del horario:
+- **Retorna `null`** en lugar de un estado de asistencia
+- **No se registra** la asistencia en la base de datos
+- **Se muestra un diálogo** informativo al usuario
+
+### Ejemplo de Validación
+
+```java
+// Horario de clase: 07:00 - 09:00
+// Intento de marcar: 06:30 (antes del horario)
+String estado = estrategia.calcularEstado("06:30", "07:00", "09:00");
+// Resultado: null (no se puede marcar asistencia)
+
+// Intento de marcar: 10:00 (después del horario)
+String estado = estrategia.calcularEstado("10:00", "07:00", "09:00");
+// Resultado: null (no se puede marcar asistencia)
+
+// Intento de marcar: 08:00 (dentro del horario)
+String estado = estrategia.calcularEstado("08:00", "07:00", "09:00");
+// Resultado: "PRESENTE", "RETRASO" o "FALTA" según la estrategia
+```
 
 ---
 
@@ -369,11 +427,18 @@ El flujo de selección automática funciona así:
    - Delega: `estrategia.calcularEstado("07:15", "07:00", "09:00")`
 
 3. **EstrategiaRetraso** (ConcreteStrategy):
+   - Verifica horario: `07:15` está dentro de `[07:00, 09:00]` ✅
    - Calcula diferencia: `15 minutos`
    - Como `15 <= 30` → retorna `"RETRASO"`
 
 4. **AsistenciaCU** (Context):
-   - Guarda asistencia con estado `"RETRASO"`
+   - Estado no es `null` → Guarda asistencia con estado `"RETRASO"`
+   - Retorna `true`
+
+**Escenario Alternativo**: Si el estudiante marca a las `06:30` (antes del horario):
+- **EstrategiaRetraso**: Detecta que está fuera del horario → retorna `null`
+- **AsistenciaCU**: Estado es `null` → No guarda asistencia, retorna `false`
+- **EstudianteActivity**: Muestra diálogo "Fuera del horario de clase"
 
 ---
 
@@ -419,7 +484,8 @@ String estado3 = contexto.marcarAsistencia(...); // PRESENTE/RETRASO/FALTA
 |---------|--------------|---------------------|
 | **Operación** | Operaciones aritméticas (+, -, *) | Cálculo de estado de asistencia |
 | **Parámetros** | Dos números (a, b) | Hora marcada, hora inicio, hora fin |
-| **Resultado** | Número (resultado de operación) | String ("PRESENTE", "RETRASO", "FALTA") |
+| **Resultado** | Número (resultado de operación) | String ("PRESENTE", "RETRASO", "FALTA") o null |
+| **Validación** | No aplica | Validación de horario: retorna null si está fuera del rango |
 | **Selección** | Cliente elige explícitamente | Context selecciona desde BD |
 | **Configuración** | Manual en código | Automática desde base de datos |
 
@@ -599,5 +665,12 @@ El patrón Strategy en nuestro sistema permite que cada grupo tenga su propia po
 
 **Autor**: Sistema de Asistencia - Arquitectura de Software  
 **Fecha**: 2025  
-**Versión**: 1.1
+**Versión**: 1.2
+
+### Cambios en v1.2
+- ✅ **Validación de Horario Mejorada**: Todas las estrategias ahora validan que la asistencia se marque dentro del rango `[horaInicio, horaFin]`
+- ✅ **Retorno null**: Las estrategias retornan `null` cuando se intenta marcar asistencia fuera del horario de clase
+- ✅ **No Registro de Asistencia**: El Context (`AsistenciaCU`) no registra asistencia cuando el estado es `null`
+- ✅ **Feedback al Usuario**: Se muestra un diálogo informativo cuando se intenta marcar asistencia fuera del horario
+- ✅ **Documentación Actualizada**: La interfaz `IEstrategiaAsistencia` ahora documenta que puede retornar `null`
 

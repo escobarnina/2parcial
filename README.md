@@ -46,8 +46,13 @@ com.arquitectura.asistente/
 - 📊 **Exportación de Reportes**: Exportar asistencias a Excel (.xlsx) y PDF
 - 🎯 **Patrón Strategy**: Cálculo flexible de estados de asistencia (PRESENTE, RETRASO, FALTA)
 - 🔌 **Patrón Adapter**: Exportación a múltiples formatos sin modificar código cliente
-- 📅 **Validación de Horarios**: Verificación de días y horas para marcar asistencia
+- 📅 **Validación de Horarios**: Verificación estricta de días y horas para marcar asistencia
+  - Las estrategias retornan `null` cuando se intenta marcar fuera del horario de clase
+  - No se registra asistencia fuera del horario establecido
+  - Diálogo informativo cuando se intenta marcar fuera de horario
 - 📱 **Interfaz Moderna**: Uso de Material Design y Jetpack Compose
+  - Tarjetas de grupos con información de horarios y días visibles
+  - Diseño con Material Design y esquema de colores destacado
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -168,6 +173,8 @@ Implementado en `negocio/strategy/` para calcular el estado de asistencia:
 - `EstrategiaFalta`: Política estricta
 - `IEstrategiaAsistencia`: Interface común
 
+**Validación de Horario**: Todas las estrategias validan que la asistencia se marque dentro del horario de clase (`[horaInicio, horaFin]`). Si se intenta marcar fuera del horario, las estrategias retornan `null` y no se registra la asistencia, mostrando un diálogo informativo al usuario.
+
 ### 3. Patrón Adapter
 Implementado en `datos/adapter/` para exportación:
 - `AsistenciaExcelAdapter`: Adapta Apache POI para Excel
@@ -287,6 +294,12 @@ Desarrollado como proyecto académico de Arquitectura de Software.
 
 ---
 
-**Versión**: 2.0.0  
+**Versión**: 2.1.0  
 **Última actualización**: 2025  
 **Plataforma**: Android (Nativo)
+
+### Cambios Recientes (v2.1.0)
+- ✅ Validación mejorada de horarios: Las estrategias retornan `null` cuando se intenta marcar asistencia fuera del horario de clase
+- ✅ Diálogo informativo cuando se intenta marcar asistencia fuera del horario
+- ✅ Mejora en la UI: Las tarjetas de grupos ahora muestran horarios y días de clase
+- ✅ Diseño mejorado con Material Design y esquema de colores destacado

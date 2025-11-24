@@ -1,5 +1,6 @@
 package com.arquitectura.asistente.presentacion.widget;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.arquitectura.asistente.R;
 import com.arquitectura.asistente.datos.Grupo;
+import com.arquitectura.asistente.datos.Horario;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.List;
 public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHolder> {
     private List<Grupo> grupos;
     private OnGrupoClickListener listener;
+    private Context context;
 
     public interface OnGrupoClickListener {
         void onGrupoClick(Grupo grupo);
@@ -31,9 +34,16 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
         this.listener = listener;
     }
 
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
     @NonNull
     @Override
     public GrupoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (context == null) {
+            context = parent.getContext();
+        }
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_grupo, parent, false);
         return new GrupoViewHolder(view);
@@ -60,11 +70,13 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
         notifyDataSetChanged();
     }
 
-    static class GrupoViewHolder extends RecyclerView.ViewHolder {
+    class GrupoViewHolder extends RecyclerView.ViewHolder {
         private TextView txtMateria;
         private TextView txtGrupo;
         private TextView txtDocente;
         private TextView txtSemestreGestion;
+        private TextView txtHorario;
+        private TextView txtDias;
 
         public GrupoViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -72,6 +84,8 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
             txtGrupo = itemView.findViewById(R.id.txtGrupo);
             txtDocente = itemView.findViewById(R.id.txtDocente);
             txtSemestreGestion = itemView.findViewById(R.id.txtSemestreGestion);
+            txtHorario = itemView.findViewById(R.id.txtHorario);
+            txtDias = itemView.findViewById(R.id.txtDias);
         }
 
         public void bind(Grupo grupo) {
@@ -79,6 +93,46 @@ public class GrupoAdapter extends RecyclerView.Adapter<GrupoAdapter.GrupoViewHol
             txtGrupo.setText("Grupo: " + (grupo.getGrupo() != null ? grupo.getGrupo() : "N/A"));
             txtDocente.setText("Docente: " + (grupo.getDocenteNombre() != null ? grupo.getDocenteNombre() : "N/A"));
             txtSemestreGestion.setText("Semestre " + grupo.getSemestre() + " - " + grupo.getGestion());
+            
+            // Obtener y mostrar horarios
+            if (context != null && grupo.getId() != null) {
+                try {
+                    List<Horario> horarios = Horario.obtenerHorariosGrupo(grupo.getId());
+                    if (horarios != null && !horarios.isEmpty()) {
+                        // Formatear horarios y días
+                        StringBuilder horariosStr = new StringBuilder();
+                        StringBuilder diasStr = new StringBuilder();
+                        
+                        for (int i = 0; i < horarios.size(); i++) {
+                            Horario h = horarios.get(i);
+                            if (i > 0) {
+                                horariosStr.append(" | ");
+                                diasStr.append(", ");
+                            }
+                            horariosStr.append(h.getHoraInicio()).append("-").append(h.getHoraFin());
+                            // Abreviar días: tomar primeros 3 caracteres
+                            String dia = h.getDia() != null ? h.getDia() : "";
+                            if (dia.length() >= 3) {
+                                diasStr.append(dia.substring(0, 3));
+                            } else {
+                                diasStr.append(dia);
+                            }
+                        }
+                        
+                        txtHorario.setText(horariosStr.toString());
+                        txtDias.setText(diasStr.toString());
+                    } else {
+                        txtHorario.setText("Sin horario");
+                        txtDias.setText("N/A");
+                    }
+                } catch (Exception e) {
+                    txtHorario.setText("Sin horario");
+                    txtDias.setText("N/A");
+                }
+            } else {
+                txtHorario.setText("Sin horario");
+                txtDias.setText("N/A");
+            }
         }
     }
 }
