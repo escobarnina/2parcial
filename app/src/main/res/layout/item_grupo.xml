@@ -87,15 +87,6 @@
                 android:textColor="#757575" />
         </LinearLayout>
 
-        <!-- Indicador de selección -->
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_more"
-            android:contentDescription="Seleccionar"
-            android:tint="#2196F3"
-            android:alpha="0.6" />
-
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
 

@@ -42,8 +42,8 @@
                     android:layout_height="80dp"
                     android:src="@drawable/ic_assignment_24"
                     android:contentDescription="@string/estudiante_titulo"
-                    android:tint="@android:color/white"
-                    android:layout_marginBottom="24dp" />
+                    android:layout_marginBottom="24dp"
+                    app:tint="@android:color/white" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -54,6 +54,17 @@
                     android:textStyle="bold"
                     android:letterSpacing="0.02"
                     android:gravity="center" />
+
+                    <!-- Hora del sistema -->
+                <TextView
+                    android:id="@+id/tvHoraSistema"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textColor="#E0E0E0"
+                    android:layout_marginBottom="24dp"
+                    android:gravity="center"/>
+                    
             </LinearLayout>
 
             <!-- Contenido principal -->
@@ -74,17 +85,7 @@
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Hora del sistema -->
-                <TextView
-                    android:id="@+id/tvHoraSistema"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textColor="#E0E0E0"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <!-- RecyclerView de Grupos (cada grupo tiene su propia tarjeta) -->
                 <androidx.recyclerview.widget.RecyclerView
